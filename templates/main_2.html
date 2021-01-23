@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<style>
+form {
+    margin: auto;
+    width: 35%;
+}
+.result {
+    margin: auto;
+    width: 35%;
+    border: 1px solid #ccc;
+}
+</style>
+<head>
+    <title>Inventory Sales Model</title>
+</head>
+<form action="{{ url_for('main2') }}" method="POST">
+    <fieldset>
+        <legend>Input values:</legend>
+        item_id:
+        <input name="item_id" type="number" required>
+        <br>
+        <br> firm_id:
+        <input name="firm_id" type="number" required>
+        <br>
+        <input type="submit">
+    </fieldset>
+</form>
+<br>
+<div class="result" align="center">
+    {% if result %}
+        {% for variable, value in original_input.items() %}
+            <b>{{ variable }}</b> : {{ value }}
+        {% endfor %}
+        <br>
+        <br> Predicted sales:
+           <p style="font-size:50px">{{ result }}</p>
+    {% endif %}
+</div>
+</html>
