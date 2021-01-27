@@ -52,7 +52,7 @@ def main2():
 		firm_id=flask.request.form['firm_id']
 		item_id=int(item_id)
 		firm_id=int(firm_id)
-		engine= sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
+		engine= sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
 		query1='''
 		SELECT *
 		FROM inventory_transaction_details
@@ -108,7 +108,7 @@ def main2():
 		if data_pts_check(versa_sm["delta"].count())==False:
 			print(-1)
 			return 0   	
-		engine=sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
+		engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
 		query='''
 		SELECT *
 		FROM forecasting_parameters
@@ -125,7 +125,7 @@ def main2():
 		conn = psycopg2.connect(
 			database="versa_db_2",
 			user="postgres",
-			password="1997",
+			password="bits123",
 			host="localhost",
 			port="5432"
 			)
@@ -150,7 +150,7 @@ def main():
 
 		item_id=int(item_id)
 		firm_id=int(firm_id)
-		engine= sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
+		engine= sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
 
 		query1='''
 		SELECT *
@@ -196,6 +196,7 @@ def main():
 		# versa_sales2=versa_sales1.groupby(versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
 		flag = 0
 		current_time = datetime.now()
+		print(current_time)
 		versa_maxyear = (versa_sales2.transaction_date.max()).year
 		if current_time.year-versa_maxyear > 1:
 			flag = -1
@@ -216,7 +217,7 @@ def main():
 		if data_pts_check(versa_sm["delta"].count())==False:
 			print(-1)
 			return 0   	
-		# engine=sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
+		# engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
 		# query='''
 		# SELECT *
 		# FROM forecasting_parameters
@@ -233,7 +234,7 @@ def main():
 		# conn = psycopg2.connect(
 		# 	database="versa_db_2",
 		# 	user="postgres",
-		# 	password="1997",
+		# 	password="bits123",
 		# 	host="localhost",
 		# 	port="5432"
 		# 	)
@@ -245,6 +246,7 @@ def main():
 		# conn.close()
 
 		res=pred.sales_forecast(item_id,firm_id,versa_sm)
+		print(res)
 		return flask.render_template('main.html',original_input={'item_id':item_id,'firm_id':firm_id},result=res,)
 
 # class fc(Resource):
