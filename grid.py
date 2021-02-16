@@ -42,7 +42,7 @@ def adfuller_test(sales):
         print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
         return 1
     else:
-        #print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
+        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
         return 0
 def sarima_configs(seasonal=[0]):
 	models = list()
@@ -165,7 +165,7 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     # versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(str)
     # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
     # versa_sm=versa_sales_monthly.set_index('transaction_date')
-    # first_diff = versa_sm.diff()[1:]
+    first_diff = versa_sm.diff()[1:]
     
     # flag =0
     # current_time = datetime.now()
@@ -176,7 +176,6 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     #     return 0
 
     #SHOULD CHANGE THE CODE..ROUGH CODE TO SELECT THE DATAFRAME TO TAKE AS TRAIN AND TEST
-    d=-1
     test_result=adfuller(versa_sm["delta"])
     stationary = adfuller_test(versa_sm['delta'])
     total_size=len(versa_sm)
@@ -219,9 +218,9 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     seasonal_q=minpara[1][2]
     s=minpara[1][3]
     conn = psycopg2.connect(
-    	database="versa_db_2",
+    	database="versa_db",
     	user="postgres",
-    	password="1997",
+    	password="bits123",
     	host="localhost",
     	port="5432"
     	)
@@ -232,6 +231,6 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     conn.commit()
     cur.close()
     conn.close()
-    return 0
+    # return 0
     #return scores[0]
     #scores[0] needs to be saved in the db.

@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from datetime import datetime
 from datetime import timedelta
 from pandas.plotting import register_matplotlib_converters
@@ -43,7 +43,7 @@ def sales_forecast(item_id,firm_id,versa_sm):
     item_id=int(item_id)
     firm_id=int(firm_id)
     #versa_sales = pd.read_csv(r"C:\Users\prasa\Documents\programs\demo_sales_fc\data_updated22-09.csv", parse_dates=[4], index_col=0, squeeze=True, date_parser=parser)
-    engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
+    engine=sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
     query='''
     SELECT *
     FROM forecasting_parameters

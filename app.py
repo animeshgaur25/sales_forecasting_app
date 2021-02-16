@@ -1,5 +1,6 @@
 import grid
 import pred
+import abc
 import flask
 import flask_restful
 import sqlalchemy
@@ -52,7 +53,7 @@ def main2():
 		firm_id=flask.request.form['firm_id']
 		item_id=int(item_id)
 		firm_id=int(firm_id)
-		engine= sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
+		engine= sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
 		query1='''
 		SELECT *
 		FROM inventory_transaction_details
@@ -108,7 +109,7 @@ def main2():
 		if data_pts_check(versa_sm["delta"].count())==False:
 			print(-1)
 			return 0   	
-		engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
+		engine=sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
 		query='''
 		SELECT *
 		FROM forecasting_parameters
@@ -125,7 +126,7 @@ def main2():
 		conn = psycopg2.connect(
 			database="versa_db_2",
 			user="postgres",
-			password="bits123",
+			password="1997",
 			host="localhost",
 			port="5432"
 			)
@@ -150,7 +151,7 @@ def main():
 
 		item_id=int(item_id)
 		firm_id=int(firm_id)
-		engine= sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
+		engine= sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
 
 		query1='''
 		SELECT *
@@ -196,7 +197,6 @@ def main():
 		# versa_sales2=versa_sales1.groupby(versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
 		flag = 0
 		current_time = datetime.now()
-		print(current_time)
 		versa_maxyear = (versa_sales2.transaction_date.max()).year
 		if current_time.year-versa_maxyear > 1:
 			flag = -1
@@ -217,7 +217,7 @@ def main():
 		if data_pts_check(versa_sm["delta"].count())==False:
 			print(-1)
 			return 0   	
-		# engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db_2')
+		# engine=sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
 		# query='''
 		# SELECT *
 		# FROM forecasting_parameters
@@ -234,7 +234,7 @@ def main():
 		# conn = psycopg2.connect(
 		# 	database="versa_db_2",
 		# 	user="postgres",
-		# 	password="bits123",
+		# 	password="1997",
 		# 	host="localhost",
 		# 	port="5432"
 		# 	)
@@ -246,7 +246,6 @@ def main():
 		# conn.close()
 
 		res=pred.sales_forecast(item_id,firm_id,versa_sm)
-		print(res)
 		return flask.render_template('main.html',original_input={'item_id':item_id,'firm_id':firm_id},result=res,)
 
 # class fc(Resource):
@@ -254,7 +253,26 @@ def main():
 #         return {'data' :pred.sales_forecast(first_number,second_number)}
     
 # api.add_resource(fc, '/4cast/<first_number>/<second_number>')
+@app.route('/abc', methods=['GET','POST'])
+def main3():
+	if (flask.request.method == 'GET'):
+		return (flask.render_template('abc.html'))
+	if (flask.request.method == 'POST'):
+		firm_id= flask.request.form['firm_id']
+		firm_id = int(firm_id)
+		engine= sqlalchemy.create_engine('postgresql://postgres:1997@localhost:5432/versa_db_2')
 
+		query='''
+		SELECT *
+		FROM inventory_transaction_details
+		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
+		ORDER BY inventory_item_id;
+		'''%{'firm_id': firm_id}
+		versa_sales = pd.read_sql_query(query, engine)
+
+		res= abc.abc_analysis(firm_id,versa_sales)
+		return flask.render_template('abc.html',original_input={'firm_id':firm_id},result=res,)
+		
 
 
 if __name__=='__main__':
