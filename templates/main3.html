@@ -5,33 +5,53 @@ form {
     margin: auto;
     width: 35%;
 }
-.result {
+.tables{
+    display: flex;
+    justify-content: space-between;
+    width: 720px;
     margin: auto;
-    width: 35%;
-    border: 1px solid #ccc;
 }
+
+body            { font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;}
+a, h1, h2       { color: #377ba8; }
+h1, h2          { margin: 0; }
+h1              { border-bottom: 2px solid #eee; }
+h2              { font-size: 1.2em; }
+
+table.dataframe, .dataframe th, .dataframe td {
+  border: none;
+  border-bottom: 1px solid #C8C8C8;
+  border-collapse: collapse;
+  text-align:left;
+  padding: 10px;
+  margin-bottom: 40px;
+  font-size: 0.9em;
+}
+
+tr:nth-child(odd)		{ background-color:#eee; }
+tr:nth-child(even)	{ background-color:#fff; }
+
+tr:hover            { background-color: #ffff99;}
 </style>
 <head>
     <title>ABC analysis</title>
 </head>
+<h1> ABC analysis  </h1>
 <form action="{{ url_for('main3') }}" method="POST">
     <fieldset>
-        <legend>Input values:</legend>
-        <br> firm_id:
+        <legend>Enter firm id:</legend>
         <input name="firm_id" type="number" required>
         <br>
         <input type="submit">
     </fieldset>
 </form>
 <br>
-<div class="result" align="center">
-    {% if result %}
-        {% for variable, value in original_input.items() %}
-            <b>{{ variable }}</b> : {{ value }}
-        {% endfor %}
-        <br>
-        <br>
-           <p style="font-size:50px">{{ result }}</p>
-    {% endif %}
+<div class="tables">
+    {% for table in tables %}
+        <div class="table-container">
+            {{titles[loop.index]}}
+            {{ table|safe }}
+        </div>
+    {% endfor %}
 </div>
 </html>
