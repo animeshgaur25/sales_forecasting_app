@@ -39,10 +39,10 @@ def adfuller_test(sales):
     for value,label in zip(result,labels):
         print(label+' : '+str(value) )
     if result[1] <= 0.05:
-        print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
+        #print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
         return 1
     else:
-        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
+        #print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
         return 0
 def sarima_configs(seasonal=[0]):
 	models = list()
@@ -136,7 +136,7 @@ def grid_search(train_data, test_data, cfg_list, parallel=True):
 
 def user_inp_grid_search(item_id,firm_id,versa_sm):
     # time.sleep(10)
-    # print("Hi")
+    print("Hi")
     # return 0
     item_id=int(item_id)
     firm_id=int(firm_id)
@@ -166,7 +166,7 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
     # versa_sm=versa_sales_monthly.set_index('transaction_date')
     first_diff = versa_sm.diff()[1:]
-    
+    print("versa_sm")
     # flag =0
     # current_time = datetime.now()
     # versa_maxyear = (versa_sales2.transaction_date.max()).year
@@ -176,10 +176,13 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     #     return 0
 
     #SHOULD CHANGE THE CODE..ROUGH CODE TO SELECT THE DATAFRAME TO TAKE AS TRAIN AND TEST
+    d=-1
     test_result=adfuller(versa_sm["delta"])
     stationary = adfuller_test(versa_sm['delta'])
     total_size=len(versa_sm)
     train_size=math.floor(0.8*total_size)
+    train_data = versa_sm.head(train_size)
+    test_data = versa_sm.tail(len(versa_sm) -train_size)
     if stationary == 1:
         # train_data = versa_sm[(versa_sm.index<'2020-01-01 00:00:00')]
         # test_data = versa_sm[(versa_sm.index>='2020-01-01 00:00:00')]
@@ -197,13 +200,13 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
             test_data = first_diff.tail(len(first_diff) -train_size)
         else:
         	d=2
-
+    
     # train_data = versa_sm[(versa_sm.index<'2014-05-01')]
     # test_data = versa_sm[(versa_sm.index>='2014-05-01')]
     cfg_list = sarima_configs(seasonal=[0,2,3,4,6,9,12])
     # grid search
     scores = grid_search(train_data, test_data, cfg_list)
-    #print('done')
+    print('done')
     # list top 3 configs
     for cfg, error in scores[:3]:
     	print(cfg, error)
@@ -231,6 +234,6 @@ def user_inp_grid_search(item_id,firm_id,versa_sm):
     conn.commit()
     cur.close()
     conn.close()
-    # return 0
+    return 0
     #return scores[0]
     #scores[0] needs to be saved in the db.
