@@ -271,8 +271,10 @@ def main3():
 		'''%{'firm_id': firm_id}
 		versa_sales = pd.read_sql_query(query, engine)
 		versa_sales['transaction_date']=  pd.to_datetime(versa_sales['transaction_date'], errors = 'coerce')
-		print(versa_sales)
-		# versa_sales = versa_sales.iloc[:,['inventory_item_id',	'delta', 'transaction_date',	'created_at-2',	'updated_at-2','firm_id']]
+		print(versa_sales.columns)
+		# cols=['inventory_item_id', 'delta', 'transaction_date',	'created_at-2',	'updated_at-2','firm_id']
+		# versa_sales=versa_sales[versa_sales.columns[cols]]
+		versa_sales = versa_sales.iloc[:,[2,3,4,5,6]]
 
 		# obsolete_items = versa_sales[versa_sales['transaction_date']<'2018-01-01']
 		versa_sales = versa_sales[versa_sales['transaction_date']>'2018-01-01']
@@ -288,8 +290,7 @@ def main3():
 		total_sales = total_sales.sort_values(by='delta')
 		no_of_items = len(total_sales)
 		high, medium, low = np.split(total_sales, [int(.2*no_of_items), int(.5*no_of_items)])
-		return flask.render_template('main3.html',original_input={'firm_id':firm_id},result=[high, medium, low],)
-		
+		return flask.render_template('main3.html',original_input={'firm_id':firm_id},tables=[high.to_html(classes='data', header="true"), medium.to_html(classes='data', header="true"), low.to_html(classes='data', header="true")], titles = ['na', 'High Moving Items', 'Medium Moving Items', 'Low Moving Items'],)		
 
 
 if __name__=='__main__':
