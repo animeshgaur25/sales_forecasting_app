@@ -7,8 +7,12 @@ form {
 }
 .tables{
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
     width: 720px;
+    margin: auto;
+}
+.table-container{
     margin: auto;
 }
 
@@ -19,7 +23,7 @@ h1              { border-bottom: 2px solid #eee; }
 h2              { font-size: 1.2em; }
 
 table.dataframe, .dataframe th, .dataframe td {
-  border: none;
+  border: 1;
   border-bottom: 1px solid #C8C8C8;
   border-collapse: collapse;
   text-align:left;
