@@ -218,7 +218,7 @@ def main():
 		if data_pts_check(versa_sm["delta"].count())==False:
 			print(-1)
 			# return 0   	
-		# engine=sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db')
+		# engine=sqlalchemy.create_engine('postgresql://postgres:bits123@18.216.156.245:5432/versa_db')
 		# query='''
 		# SELECT *
 		# FROM forecasting_parameters
@@ -236,7 +236,7 @@ def main():
 		# 	database="versa_db",
 		# 	user="postgres",
 		# 	password="bits123",
-		# 	host="localhost",
+		# 	host="18.216.156.245",
 		# 	port="5432"
 		# 	)
 		# cur= conn.cursor()
@@ -264,33 +264,50 @@ def main3():
 		engine= sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db')
 
 		query='''
-		SELECT *
+		SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currencies_name
 		FROM inventory_transaction_details
-		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
+		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
 		ORDER BY inventory_item_id;
 		'''%{'firm_id': firm_id}
 		versa_sales = pd.read_sql_query(query, engine)
 		versa_sales['transaction_date']=  pd.to_datetime(versa_sales['transaction_date'], errors = 'coerce')
-		print(versa_sales.columns)
-		# cols=['inventory_item_id', 'delta', 'transaction_date',	'created_at-2',	'updated_at-2','firm_id']
-		# versa_sales=versa_sales[versa_sales.columns[cols]]
-		versa_sales = versa_sales.iloc[:,[2,3,4,5,6]]
-
+		versa_sales = versa_sales[versa_sales["delta"]<0]
+		versa_sales["delta"] = versa_sales["delta"].abs()
+		versa_sales = versa_sales.drop(['firm_id'], axis=1)
+		versa_sales['transaction_date'] = versa_sales.transaction_date.dt.to_period("M")
+		versa_sales = versa_sales.groupby(['id', 'part_number', 'price', 'currency_id','transaction_date' ], as_index=False).sum()
 		# obsolete_items = versa_sales[versa_sales['transaction_date']<'2018-01-01']
-		versa_sales = versa_sales[versa_sales['transaction_date']>'2018-01-01']
+		today = pd.to_datetime("today")
+		obsolete_time = (today - pd.DateOffset(years=2)).to_period("M")
+		versa_sales = versa_sales[versa_sales['transaction_date']>obsolete_time]
 
 		# non-stocked items
-		versa_sales = versa_sales[versa_sales['transaction_date']>'2019-01-01']
+		# versa_sales = versa_sales[versa_sales['transaction_date']>'2019-01-01']
 
-		# abc analysis
-		total_sales = versa_sales[versa_sales['delta'] < 0]
+		no_of_items = len(versa_sales)
+		# currencies
+		if (versa_sales['currency_id']==2).any():
+			versa_sales['revenue'] = versa_sales.price * versa_sales.delta
+		elif (versa_sales['currency_id']==3).any():
+			versa_sales['revenue'] = versa_sales.price * versa_sales.delta * 1.41
 		
+		# abc analysis
+		versa_sales_abc = versa_sales.sort_values(by='revenue', ascending=False)
+		A, B, C = np.split(versa_sales_abc, [int(.2*no_of_items), int(.5*no_of_items)])
 		# HML analysis
-		total_sales =total_sales.groupby(['inventory_item_id']).sum()
-		total_sales = total_sales.sort_values(by='delta')
-		no_of_items = len(total_sales)
-		high, medium, low = np.split(total_sales, [int(.2*no_of_items), int(.5*no_of_items)])
-		return flask.render_template('main3.html',original_input={'firm_id':firm_id},tables=[high.to_html(classes='data', header="true"), medium.to_html(classes='data', header="true"), low.to_html(classes='data', header="true")], titles = ['na', 'High Moving Items', 'Medium Moving Items', 'Low Moving Items'],)		
+ 		versa_sales_hml= versa_sales.sort_values(by='delta', ascending=False)
+		high, medium, low = np.split(versa_sales_hml, [int(.2*no_of_items), int(.5*no_of_items)])
+		#tables
+		ha = pd.merge(high, A, how='inner')
+		hb = pd.merge(high, B, how='inner')
+		hc = pd.merge(high, C, how='inner')
+		ma = pd.merge(medium, A, how='inner')
+		mb = pd.merge(medium, B, how='inner')
+		mc = pd.merge(medium, C, how='inner')
+		la = pd.merge(low, A, how='inner')
+		lb = pd.merge(low, B, how='inner')
+		lc = pd.merge(low, C, how='inner')
+		return flask.render_template('main3.html',original_input={'firm_id':firm_id},tables=[ha.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), la.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true")], titles = ['na', 'High Moving Items', 'Medium Moving Items', 'Low Moving Items'],)		
 
 
 if __name__=='__main__':
