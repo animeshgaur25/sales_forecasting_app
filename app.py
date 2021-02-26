@@ -297,15 +297,24 @@ def main3():
 		high, medium, low = np.split(versa_sales_hml, [int(.2*no_of_items), int(.5*no_of_items)])
 		#tables
 		ha = pd.merge(high, A, how='inner')
+		ha_len = len(ha)
 		hb = pd.merge(high, B, how='inner')
+		hb_len = len(hb)
 		hc = pd.merge(high, C, how='inner')
+		hc_len = len(hc)
 		ma = pd.merge(medium, A, how='inner')
+		ma_len = len(ma)
 		mb = pd.merge(medium, B, how='inner')
+		mb_len = len(mb)
 		mc = pd.merge(medium, C, how='inner')
+		mc_len = len(mc)
 		la = pd.merge(low, A, how='inner')
+		la_len = len(la)
 		lb = pd.merge(low, B, how='inner')
+		lb_len = len(lb)
 		lc = pd.merge(low, C, how='inner')
-		return flask.render_template('main3.html',original_input={'firm_id':firm_id},tables=[ha.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), la.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true")], titles = ['na', 'High and A', 'High and B', 'High and C','Medium and A', 'Medium and B', 'Medium and c', 'Low and A','Low and B','Low and C', ],)		
+		lc_len = len(lc)
+		return flask.render_template('main3.html',original_input={'firm_id':firm_id}, la_len=la_len, ma_len=ma_len, ha_len=ha_len, lb_len=lb_len, mb_len=mb_len, hb_len=hb_len, lc_len=lc_len,  mc_len = mc_len, hc_len = hc_len, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles = ['na','Low and A','Medium and A', 'High and A','Low and B', 'Medium and B', 'High and B','Low and C','Medium and C', 'High and C'  ],)		
 
 
 if __name__=='__main__':
