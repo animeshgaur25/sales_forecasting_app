@@ -79,7 +79,6 @@ def sales_forecast(item_id, firm_id, versa_sm):
     # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
     # versa_sm=versa_sales_monthly.set_index('transaction_date')
     para = parameters[(parameters["inventory_item_id"] == item_id)]
-    print(para)
     p = para.loc[para['inventory_item_id'] == item_id, 'p'].iloc[0]
     d = para.loc[para['inventory_item_id'] == item_id, 'd'].iloc[0]
     q = para.loc[para['inventory_item_id'] == item_id, 'q'].iloc[0]
@@ -105,7 +104,8 @@ def sales_forecast(item_id, firm_id, versa_sm):
     # return predictions
 
     if d == 0:
-        return predictions
+        resp1 = predictions.to_json(orient='table')
+        return str(resp1)
     else:
         res = pd.Series()
         initial_val = versa_sm['delta'][-1]
@@ -113,4 +113,5 @@ def sales_forecast(item_id, firm_id, versa_sm):
             res = res.append(
                 pd.Series((initial_val+predictions[i]), index=[predictions.index[i]]))
             initial_val = initial_val+predictions[i]
-        return res
+        resp2 = res.to_json(orient='table')
+        return str(resp2)

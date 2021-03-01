@@ -14,7 +14,8 @@ import flask
 import flask_restful
 import sqlalchemy
 import psycopg2
-# from flask import Flask, request
+from flask import jsonify
+import json
 # from flask_restful import Resource, Api
 import math
 import json
@@ -268,8 +269,9 @@ def main():
         # cur.close()
         # conn.close()
         res = pred.sales_forecast(item_id, firm_id, versa_sm)
+        results = json.loads(res)
         print(res)
-        return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result=res,)
+        return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result=results['data'],)
 
 # class fc(Resource):
 #     def get(self, first_number, second_number):

@@ -10,6 +10,30 @@
       width: 35%;
       border: 1px solid #ccc;
     }
+
+    body {
+      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    }
+    table {
+      overflow-y: auto;
+      width: 400px;
+      height: 400px;
+      display: block;
+    }
+    th {
+      background-color: #015a9e;
+      color: #fff;
+    }
+    tr:nth-child(odd) {
+      background-color: #eee;
+    }
+    tr:nth-child(even) {
+      background-color: #fff;
+    }
+
+    tr:hover {
+      background-color: #b3c7dc;
+    }
   </style>
   <head>
     <title>Inventory Sales Model</title>
@@ -34,7 +58,20 @@
     <br />
     <br />
     Predicted sales:
-    <p style="font-size: 50px">{{ result }}</p>
+    <p>{{result}}</p>
+    <table border="1">
+      <tr>
+        <th>Date</th>
+        <th>Predicted Sales</th>
+      </tr>
+      <tr>
+        {% for res in result %}
+        <td>{{ res['index']}}</td>
+        <td>{{ res['predicted_mean'] }}</td>
+      </tr>
+
+      {% endfor %}
+    </table>
     {% endif %}
   </div>
 </html>
