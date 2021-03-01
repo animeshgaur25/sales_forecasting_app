@@ -66,23 +66,22 @@
         background-color: #fff;
       }
 
-      tr:hover {
-        background-color: #ffff99;
-      }
       #Abc-matrix {
         display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 500px;
+        width: 600px;
         margin: auto;
-        border-radius: 5px;
+        border: 2px solid black;
+        border-radius: 10px;
       }
-      table tr:last-child td:first-child {
+      #Abc-matrix table tr td {
+        text-align: right;
+        border: 2px solid black;
+        border-top-right-radius: 20px;
+        border-top-left-radius: 20px;
         border-bottom-left-radius: 20px;
-      }
-
-      table tr:last-child td:last-child {
         border-bottom-right-radius: 20px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+          0 6px 20px 0 rgba(0, 0, 0, 0.19);
       }
     </style>
   </head>
@@ -99,9 +98,9 @@
     <br />
     <div id="Abc-matrix">
       {% if tables %}
-      <table id="ABC">
+      <table id="ABC" cellspacing="15" cellpadding="10">
         <tr>
-          <td></td>
+          <td style="border: none; box-shadow: none"></td>
           <th scope="col">Low</th>
           <th scope="col">Medium</th>
           <th scope="col">High</th>
@@ -129,17 +128,17 @@
           <td style="background-color: #597eaa">
             No of Items: {{lb_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
           <td style="background-color: #597eaa">
             No of Items: {{mb_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
           <td style="background-color: #93c47d">
             No of Items: {{hb_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
         </tr>
         <tr>
@@ -147,17 +146,17 @@
           <td style="background-color: #f6b26b; padding: 5px">
             No of Items: {{lc_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
           <td style="background-color: #597eaa">
             No of Items: {{mc_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
           <td style="background-color: #f6b26b">
             No of Items: {{hc_len}}<br />
             Value: <br />
-            Avg demand
+            Avg demand:
           </td>
         </tr>
       </table>
