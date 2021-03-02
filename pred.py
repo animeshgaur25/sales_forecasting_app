@@ -78,6 +78,8 @@ def sales_forecast(item_id, firm_id, versa_sm):
     #versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(str)
     # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
     # versa_sm=versa_sales_monthly.set_index('transaction_date')
+
+    # Change this part
     para = parameters[(parameters["inventory_item_id"] == item_id)]
     p = para.loc[para['inventory_item_id'] == item_id, 'p'].iloc[0]
     d = para.loc[para['inventory_item_id'] == item_id, 'd'].iloc[0]
@@ -91,10 +93,13 @@ def sales_forecast(item_id, firm_id, versa_sm):
         # first_diff
     else:
         train_data = versa_sm
-    # if data_pts_chk(train_data["delta"].count())==False:
-    #     return "error"
+    if data_pts_chk(train_data["delta"].count()) == False:
+        return "error"
+
     my_order = (p, d, q)
     my_seasonal_order = (P, D, Q, s)
+
+# till here
     model = SARIMAX(train_data["delta"], order=my_order,
                     seasonal_order=my_seasonal_order)
     #start = time()
