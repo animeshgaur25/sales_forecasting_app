@@ -74,11 +74,9 @@ def sales_forecast(item_id, firm_id, versa_sm):
     # versa_sales_monthly["date"]=versa_sales_monthly.index
     #versa_sales_monthly2=versa_sales_monthly.reset_index(inplace = True)
     # versa_sales_monthly=versa_sales_monthly.drop('date',axis=1)
-
     #versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(str)
     # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
     # versa_sm=versa_sales_monthly.set_index('transaction_date')
-
     # Change this part
     para = parameters[(parameters["inventory_item_id"] == item_id)]
     p = para.loc[para['inventory_item_id'] == item_id, 'p'].iloc[0]

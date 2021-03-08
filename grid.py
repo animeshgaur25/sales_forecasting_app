@@ -246,6 +246,6 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
     conn.commit()
     cur.close()
     conn.close()
-    return 0
+    return "Parameter search completed!, click predict"
     # return scores[0]
     # scores[0] needs to be saved in the db.

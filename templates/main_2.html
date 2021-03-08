@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <style>
-    form {
-      margin: auto;
-      width: 35%;
-    }
-    .result {
-      margin: auto;
-      width: 35%;
-      border: 1px solid #ccc;
-    }
-  </style>
   <head>
     <title>Inventory Sales Model</title>
+    <style>
+      form {
+        margin: auto;
+        width: 35%;
+      }
+      .result {
+        margin: auto;
+        width: 35%;
+        border: 1px solid #ccc;
+      }
+    </style>
   </head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
   <form action="{{ url_for('main2') }}" method="POST">
     <fieldset>
       <legend>Input values:</legend>
@@ -37,4 +38,5 @@
     <p style="font-size: 50px">{{ result }}</p>
     {% endif %}
   </div>
+  <canvas id="myChart" width="400" height="400"></canvas>
 </html>

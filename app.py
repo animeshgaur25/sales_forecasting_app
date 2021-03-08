@@ -135,7 +135,7 @@ def main2():
                 return "Prediction engine is searching for the best parameters"
             elif flag == 1:
                 return "Parameter search already done, click predict"
-            return 0
+
         conn = psycopg2.connect(
             database="versa_db",
             user="postgres",
@@ -332,23 +332,58 @@ def main3():
         # tables
         ha = pd.merge(high, A, how='inner')
         ha_len = len(ha)
+        ha_value = ha['revenue'].sum().astype(int)
         hb = pd.merge(high, B, how='inner')
         hb_len = len(hb)
+        hb_value = hb['revenue'].sum().astype(int)
         hc = pd.merge(high, C, how='inner')
         hc_len = len(hc)
+        hc_value = hc['revenue'].sum().astype(int)
         ma = pd.merge(medium, A, how='inner')
         ma_len = len(ma)
+        ma_value = ma['revenue'].sum().astype(int)
         mb = pd.merge(medium, B, how='inner')
         mb_len = len(mb)
+        mb_value = mb['revenue'].sum().astype(int)
         mc = pd.merge(medium, C, how='inner')
         mc_len = len(mc)
+        mc_value = mc['revenue'].sum().astype(int)
         la = pd.merge(low, A, how='inner')
         la_len = len(la)
+        la_value = la['revenue'].sum().astype(int)
         lb = pd.merge(low, B, how='inner')
         lb_len = len(lb)
+        lb_value = lb['revenue'].sum().astype(int)
         lc = pd.merge(low, C, how='inner')
         lc_len = len(lc)
-        return flask.render_template('main3.html', original_input={'firm_id': firm_id}, la_len=la_len, ma_len=ma_len, ha_len=ha_len, lb_len=lb_len, mb_len=mb_len, hb_len=hb_len, lc_len=lc_len,  mc_len=mc_len, hc_len=hc_len, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles=['na', 'Low and A', 'Medium and A', 'High and A', 'Low and B', 'Medium and B', 'High and B', 'Low and C', 'Medium and C', 'High and C'],)
+        lc_value = lc['revenue'].sum().astype(int)
+
+        items = {
+            'ha_len': ha_len,
+            'hb_len': hb_len,
+            'hc_len': hc_len,
+            'ma_len': ma_len,
+            'mb_len': mb_len,
+            'mc_len': mc_len,
+            'la_len': la_len,
+            'lb_len': lb_len,
+            'lc_len': lc_len,
+
+        }
+
+        values = {
+            'ha_value': ha_value,
+            'hb_value': hb_value,
+            'hc_value': hc_value,
+            'ma_value': ma_value,
+            'mb_value': mb_value,
+            'mc_value': mc_value,
+            'la_value': la_value,
+            'lb_value': lb_value,
+            'lc_value': lc_value,
+
+        }
+        return flask.render_template('main3.html', original_input={'firm_id': firm_id}, items=items, values=values, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles=['na', 'Low and A', 'Medium and A', 'High and A', 'Low and B', 'Medium and B', 'High and B', 'Low and C', 'Medium and C', 'High and C'],)
 
 
 if __name__ == '__main__':
