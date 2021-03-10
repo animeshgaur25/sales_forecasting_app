@@ -211,6 +211,8 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
                 first_diff, shuffle=False, test_size=0.2)
         else:
             d = 2
+            train_data, test_data = train_test_split(
+                first_diff, shuffle=False, test_size=0.2)
 
     # train_data = versa_sm[(versa_sm.index<'2014-05-01')]
     # test_data = versa_sm[(versa_sm.index>='2014-05-01')]

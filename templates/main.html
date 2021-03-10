@@ -1,77 +1,150 @@
 <!DOCTYPE html>
 <html>
-  <style>
-    form {
-      margin: auto;
-      width: 35%;
-    }
-    .result {
-      margin: auto;
-      width: 35%;
-      border: 1px solid #ccc;
-    }
-
-    body {
-      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-    }
-    table {
-      overflow-y: auto;
-      width: 400px;
-      height: 400px;
-      display: block;
-    }
-    th {
-      background-color: #015a9e;
-      color: #fff;
-    }
-    tr:nth-child(odd) {
-      background-color: #eee;
-    }
-    tr:nth-child(even) {
-      background-color: #fff;
-    }
-
-    tr:hover {
-      background-color: #b3c7dc;
-    }
-  </style>
   <head>
     <title>Inventory Sales Model</title>
-  </head>
-  <form action="{{ url_for('main') }}" method="POST">
-    <fieldset>
-      <legend>Input values:</legend>
-      item_id:
-      <input name="item_id" type="number" required />
-      <br />
-      <br />
-      firm_id:
-      <input name="firm_id" type="number" required />
-      <br />
-      <input type="submit" />
-    </fieldset>
-  </form>
-  <br />
-  <div class="result" align="center">
-    {% if result %} {% for variable, value in original_input.items() %}
-    <b>{{ variable }}</b> : {{ value }} {% endfor %}
-    <br />
-    <br />
-    Predicted sales:
-    <p>{{result}}</p>
-    <table border="1">
-      <tr>
-        <th>Date</th>
-        <th>Predicted Sales</th>
-      </tr>
-      <tr>
-        {% for res in result %}
-        <td>{{ res['index']}}</td>
-        <td>{{ res['predicted_mean'] }}</td>
-      </tr>
+    <style>
+      form {
+        margin: auto;
+        width: 35%;
+      }
+      .result {
+        margin: auto;
+        width: 60vh;
+        height: 80vh;
+      }
 
-      {% endfor %}
-    </table>
-    {% endif %}
-  </div>
+      body {
+        font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+      }
+      th {
+        background-color: #015a9e;
+        color: #fff;
+        padding: 5px;
+      }
+      td {
+        text-align: center;
+        padding: 5px;
+      }
+      tr:nth-child(odd) {
+        background-color: #eee;
+      }
+      tr:nth-child(even) {
+        background-color: #fff;
+      }
+
+      tr:hover {
+        background-color: #b3c7dc;
+      }
+      #chart-container {
+        border: 1px solid #ccc;
+        display: block;
+        position: relative;
+        width: 30vw;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <form action="{{ url_for('main') }}" method="POST">
+      <fieldset>
+        <legend>Input values:</legend>
+        item_id:
+        <input name="item_id" type="number" required />
+        <br />
+        <br />
+        firm_id:
+        <input name="firm_id" type="number" required />
+        <br />
+        <input type="submit" />
+      </fieldset>
+    </form>
+    <br />
+    <div class="result" align="center">
+      {% if result %} {% for variable, value in original_input.items() %}
+      <b>{{ variable }}</b> : {{ value }} {% endfor %}
+      <br />
+      <br />
+      <table border="1">
+        <tr>
+          <th>Date</th>
+          <th>Predicted Sales</th>
+        </tr>
+        <tr>
+          {% for res in result %}
+          <td>{{ res['index'][:7] }}</td>
+          <td>{{ res['predicted_mean'] | int }}</td>
+        </tr>
+
+        {% endfor %}
+      </table>
+      {% endif %}
+      <br />
+      <br />
+      <div id="chart-container">
+        <canvas id="chart" width="600" height="400"></canvas>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+         const monthNames =  ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+         var lineData = [
+           {% for res in result %}
+           {
+             x :  monthNames[(new Date("{{ res['index']}}").getMonth())],
+             y : {{ res['predicted_mean'] | int}}
+           },
+           {% endfor %}
+         ];
+         if(lineData.length > 0){
+           var ctx = document.getElementById("chart")
+           new Chart(ctx, {
+             type: 'line',
+             data: {
+               labels: lineData.map(_ => _.x),
+               datasets: [
+                 {
+                  label: 'Total Sales',
+                  fill: false,
+                  lineTension: 0,
+                  backgroundColor: 'rgb(65,131,196)',
+                  borderColor: 'rgb(65,131,196)',
+                  data: lineData.map(_ => _.y)
+                 }
+               ]
+             },
+             			options: {
+      	responsive: true,
+      	title: {
+      		display: true,
+      		text: 'Sales Forecasting'
+      	},
+      	tooltips: {
+      		mode: 'index',
+      		intersect: false,
+      	},
+      	hover: {
+      		mode: 'nearest',
+      		intersect: true
+      	},
+      	scales: {
+      		xAxes: [{
+      			display: true,
+      			scaleLabel: {
+      				display: true,
+      				labelString: 'Month'
+      			}
+      		}],
+      		yAxes: [{
+      			display: true,
+      			scaleLabel: {
+      				display: true,
+      				labelString: 'Predicted Sales'
+      			}
+      		}]
+      	}
+      }
+           });
+         }
+    </script>
+  </body>
 </html>

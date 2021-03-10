@@ -60,14 +60,14 @@ def main2():
         engine = sqlalchemy.create_engine(
             'postgresql://postgres:bits123@localhost:5432/versa_db')
         query1 = '''
-		SELECT *
+		SELECT inventory_items.id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
 		FROM inventory_transaction_details
 		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.id = '%(item_id)d'
 		ORDER BY inventory_item_id;
 		''' % {'item_id': item_id}
 
         query2 = '''
-		SELECT *
+		SELECT inventory_items.id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
 		FROM inventory_transaction_details
 		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
 		ORDER BY inventory_item_id;
@@ -83,8 +83,8 @@ def main2():
         #	versa_sales1 = versa_sales1[(versa_sales1["inventory_item_id"]==item_id)]
         # if firm_id!=-1:
         #	versa_sales1 = versa_sales1[(versa_sales1["firm_id"]==firm_id)]
-        cols = [2, 3, 4]
-        versa_sales1 = versa_sales1[versa_sales1.columns[cols]]
+        # cols = [2, 3, 4]
+        # versa_sales1 = versa_sales1[versa_sales1.columns[cols]]
         versa_sales1["delta"] = versa_sales1["delta"].abs()
         versa_sales2 = versa_sales1.groupby(
             versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
@@ -117,9 +117,9 @@ def main2():
         versa_sales_monthly['transaction_date'] = pd.to_datetime(
             versa_sales_monthly['transaction_date'])
         versa_sm = versa_sales_monthly.set_index('transaction_date')
-        if data_pts_check(versa_sm["delta"].count()) == False:
+        if (len(versa_sm.index)) < 12:
             print(-1)
-            # return 0
+            return flask.render_template('main_2.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result="More Historical Sales Data required ",)
         engine = sqlalchemy.create_engine(
             'postgresql://postgres:bits123@localhost:5432/versa_db')
         query = '''
