@@ -87,6 +87,7 @@
   </head>
   <body>
     <h1>ABC analysis</h1>
+
     <form action="{{ url_for('main3') }}" method="POST">
       <fieldset>
         <legend>Enter firm id:</legend>
@@ -95,7 +96,9 @@
         <input type="submit" />
       </fieldset>
     </form>
+
     <br />
+
     <div id="Abc-matrix">
       {% if tables %}
       <table id="ABC" cellspacing="15" cellpadding="10">
@@ -110,17 +113,17 @@
           <td style="background-color: #f6b26b">
             No of Items: {{items.la_len}} <br />
             Value: {{values.la_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.la_demand}}
           </td>
           <td style="background-color: #93c47d">
             No of Items: {{items.ma_len}} <br />
             Value: {{values.ma_value}}<br />
-            Avg demand:
+            Avg demand: {{demand.ma_demand}}
           </td>
           <td style="background-color: #93c47d">
             No of Items: {{items.ha_len}}<br />
             Value: {{values.ha_value}}<br />
-            Avg demand:
+            Avg demand: {{demand.ha_demand}}
           </td>
         </tr>
         <tr>
@@ -128,47 +131,49 @@
           <td style="background-color: #597eaa">
             No of Items: {{items.lb_len}}<br />
             Value: {{values.lb_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.lb_demand}}
           </td>
           <td style="background-color: #597eaa">
             No of Items: {{items.mb_len}}<br />
             Value: {{values.mb_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.mb_demand}}
           </td>
           <td style="background-color: #93c47d">
             No of Items: {{items.hb_len}}<br />
             Value: {{values.hb_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.hb_demand}}
           </td>
         </tr>
         <tr>
           <th scope="row">C</th>
-          <td style="background-color: #f6b26b; padding: 5px">
+          <td style="background-color: #e06666; padding: 5px">
             No of Items: {{items.lc_len}}<br />
             Value: {{values.lc_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.lc_demand}}
           </td>
           <td style="background-color: #597eaa">
             No of Items: {{items.mc_len}}<br />
             Value: {{values.mc_value}} <br />
-            Avg demand:
+            Avg demand: {{demand.mc_demand}}
           </td>
           <td style="background-color: #f6b26b">
             No of Items: {{items.hc_len}}<br />
             Value: {{values.hc_value}}<br />
-            Avg demand:
+            Avg demand: {{demand.hc_demand}}
           </td>
         </tr>
       </table>
       {% endif %}
     </div>
+
     <div class="tables">
       {% for table in tables %}
       <div
         class="table-container"
         id="{{'table_product_' + loop.index|string}}"
+        title="{{titles[loop.index]}}"
       >
-        {{titles[loop.index]}} {{ table|safe }}
+        {{ table|safe }}
       </div>
       {% endfor %}
     </div>
