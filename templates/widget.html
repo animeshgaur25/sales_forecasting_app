@@ -38,7 +38,7 @@
         margin-bottom: 5em;
         justify-content: space-between;
         float: left;
-        width: 15vw;
+        width: 18vw;
         height: 40vh;
         padding: 10px;
         border-style: solid;
@@ -52,7 +52,8 @@
     <h1>Widgets</h1>
     <div id="widget-container">
       {% for i in range(9) %}
-      <div id="widget{{i}}" class="widget" title="widget{{i}} ">
+      <div id="{{widgets[i]}}" class="widget" title="widget{{i}} ">
+        <h2>{{widgets[i]}}</h2>
         <table id="table" border="1">
           <tr>
             <th>Product</th>

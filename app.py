@@ -423,7 +423,9 @@ def main3():
 @app.route('/widget', methods=['GET', 'POST'])
 def widget():
     if (flask.request.method == 'GET'):
-        return (flask.render_template('widget.html'))
+        Widgets = ['Stocked Holding', 'Excess Stock', 'Surplus Orders', 'Fill Rate',
+                   'Stocked Out', 'Potential Stock Out', 'Top New', 'Item Status Breakdown', 'Data Purity']
+        return (flask.render_template('widget.html', widgets=Widgets,))
 
 
 if __name__ == '__main__':
