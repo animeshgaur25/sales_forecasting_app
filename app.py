@@ -117,9 +117,11 @@ def main2():
         versa_sales_monthly['transaction_date'] = pd.to_datetime(
             versa_sales_monthly['transaction_date'])
         versa_sm = versa_sales_monthly.set_index('transaction_date')
+
         if (len(versa_sm.index)) < 12:
             print(-1)
             return flask.render_template('main_2.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result="More Historical Sales Data required ",)
+
         engine = sqlalchemy.create_engine(
             'postgresql://postgres:bits123@localhost:5432/versa_db')
         query = '''
@@ -134,7 +136,7 @@ def main2():
             if flag == 0:
                 return "Prediction engine is searching for the best parameters"
             elif flag == 1:
-                return "Parameter search already done, click predict"
+                return (flask.render_template('main.html'))
 
         conn = psycopg2.connect(
             database="versa_db",
@@ -238,9 +240,9 @@ def main():
         versa_sales_monthly['transaction_date'] = pd.to_datetime(
             versa_sales_monthly['transaction_date'])
         versa_sm = versa_sales_monthly.set_index('transaction_date')
-        if data_pts_check(versa_sm["delta"].count()) == False:
+        if (len(versa_sm.index)) < 12:
             print(-1)
-            # return 0
+            return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result="More Historical Sales Data required ",)
         # engine=sqlalchemy.create_engine('postgresql://postgres:bits123@18.216.156.245:5432/versa_db')
         # query='''
         # SELECT *
@@ -306,6 +308,7 @@ def main3():
             "M")
         versa_sales = versa_sales.groupby(
             ['id', 'part_number', 'price', 'currency_id', 'currency_name', 'transaction_date'], as_index=False).sum()
+
         # obsolete_items = versa_sales[versa_sales['transaction_date']<'2018-01-01']
         today = pd.to_datetime("today")
         obsolete_time = (today - pd.DateOffset(years=2)).to_period("M")
@@ -329,35 +332,54 @@ def main3():
         versa_sales_hml = versa_sales.sort_values(by='delta', ascending=False)
         high, medium, low = np.split(
             versa_sales_hml, [int(.2*no_of_items), int(.5*no_of_items)])
+
         # tables
         ha = pd.merge(high, A, how='inner')
         ha_len = len(ha)
         ha_value = ha['revenue'].sum().astype(int)
+        ha_demand = ha['delta'].mean().astype(int)
+
         hb = pd.merge(high, B, how='inner')
         hb_len = len(hb)
         hb_value = hb['revenue'].sum().astype(int)
+        hb_demand = hb['delta'].mean().astype(int)
+
         hc = pd.merge(high, C, how='inner')
         hc_len = len(hc)
         hc_value = hc['revenue'].sum().astype(int)
+        hc_demand = hc['delta'].mean().astype(int)
+
         ma = pd.merge(medium, A, how='inner')
         ma_len = len(ma)
         ma_value = ma['revenue'].sum().astype(int)
+        ma_demand = ma['delta'].mean().astype(int)
+
         mb = pd.merge(medium, B, how='inner')
         mb_len = len(mb)
         mb_value = mb['revenue'].sum().astype(int)
+        mb_demand = mb['delta'].mean().astype(int)
+
         mc = pd.merge(medium, C, how='inner')
         mc_len = len(mc)
         mc_value = mc['revenue'].sum().astype(int)
+        mc_demand = mc['delta'].mean().astype(int)
+
         la = pd.merge(low, A, how='inner')
         la_len = len(la)
         la_value = la['revenue'].sum().astype(int)
+        la_demand = la['delta'].mean().astype(int)
+
         lb = pd.merge(low, B, how='inner')
         lb_len = len(lb)
         lb_value = lb['revenue'].sum().astype(int)
+        lb_demand = lb['delta'].mean().astype(int)
+
         lc = pd.merge(low, C, how='inner')
         lc_len = len(lc)
         lc_value = lc['revenue'].sum().astype(int)
+        lc_demand = lc['delta'].mean().astype(int)
 
+        # context
         items = {
             'ha_len': ha_len,
             'hb_len': hb_len,
@@ -383,7 +405,25 @@ def main3():
             'lc_value': lc_value,
 
         }
-        return flask.render_template('main3.html', original_input={'firm_id': firm_id}, items=items, values=values, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles=['na', 'Low and A', 'Medium and A', 'High and A', 'Low and B', 'Medium and B', 'High and B', 'Low and C', 'Medium and C', 'High and C'],)
+
+        demand = {
+            'ha_demand': ha_demand,
+            'hb_demand': hb_demand,
+            'hc_demand': hc_demand,
+            'ma_demand': ma_demand,
+            'mb_demand': mb_demand,
+            'mc_demand': mc_demand,
+            'la_demand': la_demand,
+            'lb_demand': lb_demand,
+            'lc_demand': lc_demand,
+        }
+        return flask.render_template('main3.html', original_input={'firm_id': firm_id}, items=items, values=values, demand=demand, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles=['na', 'Low and A', 'Medium and A', 'High and A', 'Low and B', 'Medium and B', 'High and B', 'Low and C', 'Medium and C', 'High and C'],)
+
+
+@app.route('/widget', methods=['GET', 'POST'])
+def widget():
+    if (flask.request.method == 'GET'):
+        return (flask.render_template('widget.html'))
 
 
 if __name__ == '__main__':
