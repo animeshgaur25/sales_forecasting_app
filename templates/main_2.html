@@ -1,41 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Inventory Sales Model</title>
-    <style>
-      form {
-        margin: auto;
-        width: 35%;
-      }
-      .result {
-        margin: auto;
-        width: 35%;
-        border: 1px solid #ccc;
-      }
-    </style>
-  </head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
-  <form action="{{ url_for('main2') }}" method="POST">
-    <fieldset>
-      <legend>Input values:</legend>
-      item_id:
-      <input name="item_id" type="number" required />
-      <br />
-      <br />
-      firm_id:
-      <input name="firm_id" type="number" required />
-      <br />
-      <input type="submit" />
-    </fieldset>
-  </form>
+<style>
+  form {
+    margin: auto;
+    width: 35%;
+  }
+
+  .result {
+    margin: auto;
+    width: 35%;
+    border: 1px solid #ccc;
+  }
+</style>
+
+<head>
+  <title>Inventory Sales Model</title>
+</head>
+<form action="{{ url_for('main2') }}" method="POST">
+  <fieldset>
+    <legend>Click to refresh predictions</legend>
+    <!-- item_id:
+    <input name="item_id" type="number" required />
+    <br />
+    <br />
+    firm_id:
+    <input name="firm_id" type="number" required /> -->
+    <br />
+    <input value="Refresh" type="submit" />
+  </fieldset>
+</form>
+<br />
+<div class="result" align="center">
+  {% if result %}
   <br />
-  <div class="result" align="center">
-    {% if result %} {% for variable, value in original_input.items() %}
-    <b>{{ variable }}</b> : {{ value }} {% endfor %}
-    <br />
-    <br />
-    Predicted sales:
-    <p style="font-size: 50px">{{ result }}</p>
-    {% endif %}
-  </div>
+  <br />
+  {{ result }} {% endif %}
+</div>
+
 </html>

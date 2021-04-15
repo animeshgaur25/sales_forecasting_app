@@ -74,6 +74,42 @@ def sarima_configs(seasonal=[0]):
                                 models.append(cfg)
     return models
 
+def data_preprocessing(versa_sales1, item_id):
+    versa_sales1 = versa_sales1[versa_sales1.id==item_id]
+    
+    if len(versa_sales1) > 12:
+        versa_sales1['transaction_date'] = pd.to_datetime(versa_sales1['transaction_date'], errors='coerce')
+        versa_sales1['transaction_date'] = versa_sales1['transaction_date'].dropna()
+        versa_sales1 = versa_sales1.drop(columns=['firm_id'])
+        versa_sales2 = versa_sales1.groupby(
+            versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
+
+        flag = 0
+        current_time = datetime.now()
+        versa_maxyear = (versa_sales2.transaction_date.max()).year
+        if current_time.year-versa_maxyear > 1:
+            flag = -1
+            print(flag)
+            # return 0
+        r = pd.date_range(start=versa_sales2.transaction_date.min(
+        ), end=versa_sales2.transaction_date.max(), freq='MS')
+        #r = pd.date_range(start=versa_sales2.transaction_date.min(), end=datetime.now())
+        versa_sales3 = versa_sales2.set_index('transaction_date').reindex(
+            r).fillna(0.0).rename_axis('transaction_date').reset_index()
+
+        versa_sales_monthly = versa_sales3.groupby(versa_sales3.transaction_date.dt.to_period("M")).agg({'delta': np.sum})
+        # print(versa_sales3)
+        versa_sales_monthly["date"] = versa_sales_monthly.index
+        versa_sales_monthly2 = versa_sales_monthly.reset_index(inplace=True)
+        versa_sales_monthly = versa_sales_monthly.drop('date', axis=1)
+
+        versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(
+            str)
+        versa_sales_monthly['transaction_date'] = pd.to_datetime(
+            versa_sales_monthly['transaction_date'])
+        versa_sm = versa_sales_monthly.set_index('transaction_date')
+        print(versa_sm)
+        return versa_sm
 
 def sarima_forecast(history, config):
     order, sorder = config
