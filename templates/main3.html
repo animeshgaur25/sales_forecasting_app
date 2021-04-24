@@ -1,227 +1,228 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>ABC analysis</title>
-    <link
-      href="http://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
-    />
-    <link rel="stylesheet" href="/resources/demos/style.css" />
-    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <style>
-      form {
-        margin: auto;
-        width: 35%;
-      }
-      .tables {
-        display: none;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 720px;
-        margin: auto;
-      }
-      .table-container {
-        margin: auto;
-      }
 
-      body {
-        font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-      }
-      a,
-      h1,
-      h2 {
-        color: #377ba8;
-      }
-      h1,
-      h2 {
-        margin: 0;
-      }
-      h1 {
-        border-bottom: 2px solid #eee;
-      }
-      h2 {
-        font-size: 1.2em;
-      }
+<head>
+  <title>ABC analysis</title>
+  <link href="http://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet" />
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <link rel="stylesheet" href="/resources/demos/style.css" />
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <style>
+    form {
+      margin: auto;
+      width: 35%;
+    }
 
-      table.dataframe,
-      .dataframe th,
-      .dataframe td {
-        border: 10px;
-        border-bottom: 2px solid #c8c8c8;
-        border-collapse: collapse;
-        text-align: left;
-        padding: 10px;
-        margin-bottom: 40px;
-      }
+    .tables {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 720px;
+      margin: auto;
+    }
 
-      .tables tr:nth-child(odd) {
-        background-color: #eee;
-      }
-      .tables tr:nth-child(even) {
-        background-color: #fff;
-      }
+    .table-container {
+      margin: auto;
+    }
 
-      #Abc-matrix {
-        display: flex;
-        width: 600px;
-        margin: auto;
-        border: 2px solid black;
-        border-radius: 10px;
-      }
-      #Abc-matrix table tr td {
-        text-align: right;
-        border: 2px solid black;
-        border-top-right-radius: 20px;
-        border-top-left-radius: 20px;
-        border-bottom-left-radius: 20px;
-        border-bottom-right-radius: 20px;
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
-          0 6px 20px 0 rgba(0, 0, 0, 0.19);
-      }
-    </style>
-  </head>
-  <body>
-    <h1>ABC analysis</h1>
+    body {
+      font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    }
 
-    <form action="{{ url_for('main3') }}" method="POST">
-      <fieldset>
-        <legend>Enter firm id:</legend>
-        <input name="firm_id" type="number" required />
-        <br />
-        <input type="submit" />
-      </fieldset>
-    </form>
+    a,
+    h1,
+    h2 {
+      color: #377ba8;
+    }
 
-    <br />
+    h1,
+    h2 {
+      margin: 0;
+    }
 
-    <div id="Abc-matrix">
-      {% if tables %}
-      <table id="ABC" cellspacing="15" cellpadding="10">
-        <tr>
-          <td style="border: none; box-shadow: none"></td>
-          <th scope="col">Low</th>
-          <th scope="col">Medium</th>
-          <th scope="col">High</th>
-        </tr>
-        <tr>
-          <th scope="row">A</th>
-          <td style="background-color: #f6b26b">
-            No of Items: {{items.la_len}} <br />
-            Value: {{values.la_value}} <br />
-            Avg demand: {{demand.la_demand}}
-          </td>
-          <td style="background-color: #93c47d">
-            No of Items: {{items.ma_len}} <br />
-            Value: {{values.ma_value}}<br />
-            Avg demand: {{demand.ma_demand}}
-          </td>
-          <td style="background-color: #93c47d">
-            No of Items: {{items.ha_len}}<br />
-            Value: {{values.ha_value}}<br />
-            Avg demand: {{demand.ha_demand}}
-          </td>
-        </tr>
-        <tr>
-          <th scope="row">B</th>
-          <td style="background-color: #597eaa">
-            No of Items: {{items.lb_len}}<br />
-            Value: {{values.lb_value}} <br />
-            Avg demand: {{demand.lb_demand}}
-          </td>
-          <td style="background-color: #597eaa">
-            No of Items: {{items.mb_len}}<br />
-            Value: {{values.mb_value}} <br />
-            Avg demand: {{demand.mb_demand}}
-          </td>
-          <td style="background-color: #93c47d">
-            No of Items: {{items.hb_len}}<br />
-            Value: {{values.hb_value}} <br />
-            Avg demand: {{demand.hb_demand}}
-          </td>
-        </tr>
-        <tr>
-          <th scope="row">C</th>
-          <td style="background-color: #e06666; padding: 5px">
-            No of Items: {{items.lc_len}}<br />
-            Value: {{values.lc_value}} <br />
-            Avg demand: {{demand.lc_demand}}
-          </td>
-          <td style="background-color: #597eaa">
-            No of Items: {{items.mc_len}}<br />
-            Value: {{values.mc_value}} <br />
-            Avg demand: {{demand.mc_demand}}
-          </td>
-          <td style="background-color: #f6b26b">
-            No of Items: {{items.hc_len}}<br />
-            Value: {{values.hc_value}}<br />
-            Avg demand: {{demand.hc_demand}}
-          </td>
-        </tr>
-      </table>
-      {% endif %}
+    h1 {
+      border-bottom: 2px solid #eee;
+    }
+
+    h2 {
+      font-size: 1.2em;
+    }
+
+    table.dataframe,
+    .dataframe th,
+    .dataframe td {
+      border: 10px;
+      border-bottom: 2px solid #c8c8c8;
+      border-collapse: collapse;
+      text-align: left;
+      padding: 10px;
+      margin-bottom: 40px;
+    }
+
+    .tables tr:nth-child(odd) {
+      background-color: #eee;
+    }
+
+    .tables tr:nth-child(even) {
+      background-color: #fff;
+    }
+
+    #Abc-matrix {
+      display: flex;
+      width: 600px;
+      margin: auto;
+      border: 2px solid black;
+      border-radius: 10px;
+    }
+
+    #Abc-matrix table tr td {
+      text-align: right;
+      border: 2px solid black;
+      border-top-right-radius: 20px;
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>ABC analysis</h1>
+
+  <form action="{{ url_for('main3') }}" method="POST">
+    <fieldset>
+      <legend>Enter firm id:</legend>
+      <input name="firm_id" type="number" required />
+      <br />
+      <input type="submit" />
+    </fieldset>
+  </form>
+
+  <br />
+
+  <div id="Abc-matrix">
+    {% if tables %}
+    <table id="ABC" cellspacing="15" cellpadding="10">
+      <tr>
+        <td style="border: none; box-shadow: none"></td>
+        <th scope="col">Low</th>
+        <th scope="col">Medium</th>
+        <th scope="col">High</th>
+      </tr>
+      <tr>
+        <th scope="row">A</th>
+        <td style="background-color: #f6b26b">
+          No of Items: {{items.la_len}} <br />
+          Value: {{values.la_value}} <br />
+          Avg demand: {{demand.la_demand}}
+        </td>
+        <td style="background-color: #93c47d">
+          No of Items: {{items.ma_len}} <br />
+          Value: {{values.ma_value}}<br />
+          Avg demand: {{demand.ma_demand}}
+        </td>
+        <td style="background-color: #93c47d">
+          No of Items: {{items.ha_len}}<br />
+          Value: {{values.ha_value}}<br />
+          Avg demand: {{demand.ha_demand}}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">B</th>
+        <td style="background-color: #597eaa">
+          No of Items: {{items.lb_len}}<br />
+          Value: {{values.lb_value}} <br />
+          Avg demand: {{demand.lb_demand}}
+        </td>
+        <td style="background-color: #597eaa">
+          No of Items: {{items.mb_len}}<br />
+          Value: {{values.mb_value}} <br />
+          Avg demand: {{demand.mb_demand}}
+        </td>
+        <td style="background-color: #93c47d">
+          No of Items: {{items.hb_len}}<br />
+          Value: {{values.hb_value}} <br />
+          Avg demand: {{demand.hb_demand}}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">C</th>
+        <td style="background-color: #e06666; padding: 5px">
+          No of Items: {{items.lc_len}}<br />
+          Value: {{values.lc_value}} <br />
+          Avg demand: {{demand.lc_demand}}
+        </td>
+        <td style="background-color: #597eaa">
+          No of Items: {{items.mc_len}}<br />
+          Value: {{values.mc_value}} <br />
+          Avg demand: {{demand.mc_demand}}
+        </td>
+        <td style="background-color: #f6b26b">
+          No of Items: {{items.hc_len}}<br />
+          Value: {{values.hc_value}}<br />
+          Avg demand: {{demand.hc_demand}}
+        </td>
+      </tr>
+    </table>
+    {% endif %}
+  </div>
+
+  <div class="tables">
+    {% for table in tables %}
+    <div class="table-container" id="{{'table_product_' + loop.index|string}}" title="{{titles[loop.index]}}">
+      {{ table|safe }}
     </div>
+    {% endfor %}
+  </div>
 
-    <div class="tables">
-      {% for table in tables %}
-      <div
-        class="table-container"
-        id="{{'table_product_' + loop.index|string}}"
-        title="{{titles[loop.index]}}"
-      >
-        {{ table|safe }}
-      </div>
-      {% endfor %}
-    </div>
-
-    <script type="text/javascript" }}>
-      document.querySelector("#ABC").addEventListener("click", function (e) {
-        console.log(e.target.parentElement.rowIndex);
-        if (e.target.parentElement.rowIndex == 1) {
-          console.log(e.target.cellIndex);
-          switch (e.target.cellIndex) {
-            case 1:
-              $("#table_product_1").dialog();
-              break;
-            case 2:
-              $("#table_product_2").dialog();
-              break;
-            case 3:
-              $("#table_product_3").dialog();
-              break;
-          }
-        } else if (e.target.parentElement.rowIndex == 2) {
-          console.log(e.target.cellIndex);
-          switch (e.target.cellIndex) {
-            case 1:
-              $("#table_product_4").dialog();
-              break;
-            case 2:
-              $("#table_product_5").dialog();
-              break;
-            case 3:
-              $("#table_product_6").dialog();
-              break;
-          }
-        } else if (e.target.parentElement.rowIndex == 3) {
-          console.log(e.target.cellIndex);
-          switch (e.target.cellIndex) {
-            case 1:
-              $("#table_product_7").dialog();
-              break;
-            case 2:
-              $("#table_product_8").dialog();
-              break;
-            case 3:
-              $("#table_product_9").dialog();
-              break;
-          }
+  <script type="text/javascript" }}>
+    document.querySelector("#ABC").addEventListener("click", function (e) {
+      console.log(e.target.parentElement.rowIndex);
+      if (e.target.parentElement.rowIndex == 1) {
+        console.log(e.target.cellIndex);
+        switch (e.target.cellIndex) {
+          case 1:
+            $("#table_product_1").dialog();
+            break;
+          case 2:
+            $("#table_product_2").dialog();
+            break;
+          case 3:
+            $("#table_product_3").dialog();
+            break;
         }
-      });
-    </script>
-  </body>
+      } else if (e.target.parentElement.rowIndex == 2) {
+        console.log(e.target.cellIndex);
+        switch (e.target.cellIndex) {
+          case 1:
+            $("#table_product_4").dialog();
+            break;
+          case 2:
+            $("#table_product_5").dialog();
+            break;
+          case 3:
+            $("#table_product_6").dialog();
+            break;
+        }
+      } else if (e.target.parentElement.rowIndex == 3) {
+        console.log(e.target.cellIndex);
+        switch (e.target.cellIndex) {
+          case 1:
+            $("#table_product_7").dialog();
+            break;
+          case 2:
+            $("#table_product_8").dialog();
+            break;
+          case 3:
+            $("#table_product_9").dialog();
+            break;
+        }
+      }
+    });
+  </script>
+</body>
+
 </html>

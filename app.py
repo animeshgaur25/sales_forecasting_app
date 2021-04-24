@@ -6,6 +6,8 @@ from joblib import delayed
 from joblib import Parallel
 from multiprocessing import cpu_count
 from math import sqrt
+from sklearn.model_selection import train_test_split
+import math
 import time
 import grid
 import pred
@@ -36,65 +38,151 @@ app = flask.Flask(__name__, template_folder='templates')
 
 def data_pts_check(versa_sm):
     if (len(versa_sm.index)) < 12:
-        print(-1)
-    return "More Historical Sales Data required "
-
-
-def extract_data():
+        print("More Sales Data is required")
+        return -1
+def extract_sales_data(firm_id):
     engine = sqlalchemy.create_engine(
-        'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://postgres:bits123@localhost:5432/versa_db')
 
     query1 = '''
     SELECT inventory_items.id , inventory_items.firm_id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
     FROM inventory_transaction_details
-    INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id 
+    INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
     ORDER BY inventory_item_id;
-    '''
+    '''% {'firm_id': firm_id}
 
     versa_sales = pd.read_sql_query(query1, engine)
     versa_sales1 = versa_sales[versa_sales["delta"] < 0]
     versa_sales1["delta"] = versa_sales1["delta"].abs()
 
-    versa_sales1 = versa_sales1.groupby(
-        ['firm_id', 'id', 'transaction_date'], as_index=False).sum()
+    versa_sales1 = versa_sales1.groupby(['firm_id', 'id', 'transaction_date'], as_index=False).sum()
     return versa_sales1
 
 
 def call_grid_search(versa_sales1, item_id, engine, conn, cur):
-    firm_id = versa_sales1.loc[versa_sales1['id']
-                               == item_id, 'firm_id'].iloc[0]
-    print(id)
+    firm_id = versa_sales1.loc[versa_sales1['id']== item_id, 'firm_id'].iloc[0]
+    versa_sales1 = versa_sales1[versa_sales1.id ==item_id]
+    print("***************************Item Id:", item_id, "********************************")
     versa_sm = grid.data_preprocessing(versa_sales1, item_id)
-    query = '''
-    SELECT *
-    FROM forecasting_parameters
-    WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': int(item_id), 'firm_id': int(firm_id)}
-    # SQL injection
-    para_table = pd.read_sql_query(query, engine)
-    if len(para_table.index) == 1:
-        print("para table:", para_table)
-        flag = para_table.loc[para_table['inventory_item_id']
-                              == item_id, 'flag'].iloc[0]
-        if flag == 0:
-            t = Thread(target=grid.user_inp_grid_search,
-                       args=(item_id, firm_id, versa_sm),)
-            t.start()
-            return "Prediction engine is searching for best parameters"
-        elif flag == 1:
-            return ""
-
+    
+    if versa_sm is None:
+        return flask.render_template('main_2.html', result = "More Sales Data is required for this item")
     else:
-        if versa_sm is not None:
-            data_pts_check(versa_sm)
+        query = '''
+        SELECT *
+        FROM forecasting_parameters
+        WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': int(item_id), 'firm_id': int(firm_id)}
+    
+        # SQL injection
+        para_table = pd.read_sql_query(query, engine)
 
+        if para_table.empty:
             cur.execute("INSERT into forecasting_parameters (inventory_item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                         (int(item_id), int(firm_id), -1, -1, -1, -1, -1, -1, -1, 0))
             conn.commit()
 
             t = Thread(target=grid.user_inp_grid_search,
-                       args=(item_id, firm_id, versa_sm),)
+                        args=(item_id, firm_id, versa_sm),)
+            t.start()
+        else:
+            t = Thread(target=grid.user_inp_grid_search,
+                    args=(item_id, firm_id, versa_sm),)
             t.start()
 
+
+    return
+
+
+def extract_high_items(firm_id):
+    engine = sqlalchemy.create_engine(
+    'postgresql://postgres:bits123@localhost:5432/versa_db')
+    query = '''
+    SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currency_name
+    FROM inventory_transaction_details
+    INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
+    ORDER BY inventory_item_id;
+    ''' % {'firm_id': firm_id}
+    data_abc = pd.read_sql_query(query, engine)
+    print(data_abc)
+    if data_abc.empty:
+        return data_abc
+
+    else:
+        data_abc['transaction_date'] = pd.to_datetime(data_abc['transaction_date'], errors='coerce')
+        data_abc['transaction_date'] = data_abc['transaction_date'].dropna()
+        data_abc = data_abc[data_abc["delta"] < 0]
+        data_abc["delta"] = data_abc["delta"].abs()
+        data_abc = data_abc.drop(['firm_id'], axis=1)
+        data_abc['transaction_date'] = data_abc.transaction_date.dt.to_period(
+            "M")
+        # data_abc = data_abc[data_abc==firm_id]
+        data_abc = data_abc.groupby(
+            ['id', 'part_number', 'price', 'currency_id', 'currency_name', 'transaction_date'], as_index=False).sum()
+        # obsolete_items = data_abc[data_abc['transaction_date']<'2018-01-01']
+        today = pd.to_datetime("today")
+        print(data_abc)
+        obsolete_time = (today - pd.DateOffset(years=2)).to_period("M")
+        data_abc = data_abc[data_abc['transaction_date'] > obsolete_time]
+
+        # non-stocked items
+        # data_abc = data_abc[data_abc['transaction_date']>'2019-01-01']
+
+        no_of_items = len(data_abc)
+
+        # abc analysis
+        data_abc['revenue'] = data_abc.price * data_abc.delta
+        versa_sales_abc = data_abc.sort_values(
+            by='revenue', ascending=False)
+        A, B, C = np.split(versa_sales_abc, [
+                            int(.2*no_of_items), int(.5*no_of_items)])
+
+        # HML analysis
+
+        versa_sales_hml = data_abc.sort_values(by='delta', ascending=False)
+        high, medium, low = np.split(
+            versa_sales_hml, [int(.2*no_of_items), int(.5*no_of_items)])
+        # tables
+        ha = pd.merge(high, A, how='inner')
+        high_item_ids = high['id'].unique()
+        return high_item_ids
+
+def weekly_update_parameters():
+    engine = sqlalchemy.create_engine(
+    'postgresql://postgres:bits123@localhost:5432/versa_db')
+    conn = psycopg2.connect(
+        database="versa_db",
+        user="postgres",
+        password="bits123",
+        host="localhost",
+        port="5432"
+    )
+    cur = conn.cursor()
+    query = '''
+        SELECT firms.id
+        FROM firms'''
+
+    firms = pd.read_sql_query(query, engine)
+    firm_ids = firms['id']
+    print(firm_ids)
+    for firms_id in firm_ids[1:]:
+        print("****************************", firms_id)
+        firm_id = int(firms_id)
+        item_ids = extract_high_items(firm_id)
+        if item_ids is not None:
+            versa_sales1 = extract_sales_data(firm_id)
+            firm_ids = versa_sales1['firm_id']
+            print(item_ids)
+            thread_list = []
+
+            for item_id in item_ids:
+                thread =  Thread(target = call_grid_search, args=(versa_sales1, item_id,engine, conn, cur),)
+                thread_list.append(thread)
+            for thread in thread_list:
+                thread.start()
+            for thread in thread_list:
+                thread.join()
+
+    return
 
 @app.route('/')
 def hello_world():
@@ -106,76 +194,98 @@ def hello_world():
 @app.route('/grid', methods=['GET', 'POST'])
 def main2():
     if (flask.request.method == 'GET'):
-        return (flask.render_template('main_2.html'))
+        return flask.render_template('main_2.html')
 
     if (flask.request.method == 'POST'):
-        # item_id = flask.request.form['item_id']
-        # firm_id = flask.request.form['firm_id']
-        # item_id = int(item_id)
-        # firm_id = int(firm_id)
-        # engine = sqlalchemy.create_engine(
-        #     'postgresql://postgres:bits123@localhost:5432/versa_db')
-        # query1 = '''
-        # SELECT inventory_items.id, inventory_items.firm_id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
-        # FROM inventory_transaction_details
-        # INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.id = '%(item_id)d'
-        # ORDER BY inventory_item_id;
-        # ''' % {'item_id': item_id}
+        item_id = flask.request.form['item_id']
+        firm_id = flask.request.form['firm_id']
+        item_id = int(item_id)
+        firm_id = int(firm_id)
+       
+        engine = sqlalchemy.create_engine(
+        'postgresql://postgres:bits123@localhost:5432/versa_db')
+        conn = psycopg2.connect(
+            database="versa_db",
+            user="postgres",
+            password="bits123",
+            host="localhost",
+            port="5432"
+        )
+        cur = conn.cursor()
+        # query = '''
+        # SELECT forecasting_parameters.inventory_item_id
+        # FROM forecasting_parameters
+        # WHERE forecasting_parameters.firm_id = %(firm_id)d and forecasting_parameters.flag = 1
+        # ''' % {'firm_id': firm_id}
 
-        # query2 = '''
-        # SELECT inventory_items.id , inventory_items.firm_id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
-        # FROM inventory_transaction_details
-        # INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id
-        # ORDER BY inventory_item_id;
-        # '''
+        item_ids = extract_high_items(firm_id)
 
-        # if item_id != -1:
-        #     versa_sales = pd.red_sql_query(query1, engine)
-        # else:
-        #     versa_sales = pd.read_sql_query(query2, engine)
-        # versa_sales1 = versa_sales[versa_sales["delta"] < 0]
-        # versa_sales1["delta"] = versa_sales1["delta"].abs()
+        if item_ids is None:
+            return flask.render_template('main_2.html', result = "More Sales Data is required for this item",items = item_ids)
+        
+        print(item_ids)
 
-        # versa_sales1 = versa_sales1.groupby(['firm_id', 'id', 'transaction_date'], as_index=False).sum()
-        # versa_sales2 = versa_sales1[versa_sales1.firm_id==182]
-        # for item_id in versa_sales2.id:
-        #     print(id)
-        #     engine = sqlalchemy.create_engine(
-        #         'postgresql://postgres:bits123@localhost:5432/versa_db')
-        #     query = '''
-        #     SELECT *
-        #     FROM forecasting_parameters
-        #     WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': item_id, 'firm_id': firm_id}
-        #     # SQL injection
-        #     para_table = pd.read_sql_query(query, engine)
-        #     if len(para_table.index)==1:
-        #         print("para table:", para_table)
-        #         flag = para_table.loc[para_table['inventory_item_id']== item_id, 'flag'].iloc[0]
-        #         if flag == 0:
-        #             break
-        #         elif flag == 1:
-        #             break
+        versa_sales = extract_sales_data(firm_id)
+        if item_id == -1:
+            thread_list = []
+            
+            for item_id in item_ids:
+                print(item_id)
+                check = data_pts_check(versa_sales)
+                if check ==-1:
+                    continue
 
-        #     versa_sm = grid.data_preprocessing(versa_sales2, item_id)
-        #     if versa_sm is not None:
-        #         data_pts_check(versa_sm)
-        #         conn = psycopg2.connect(
-        #             database="versa_db",
-        #             user="postgres",
-        #             password="bits123",
-        #             host="localhost",
-        #             port="5432"
-        #         )
-        #         cur = conn.cursor()
+                thread =  Thread(target=call_grid_search, args=(versa_sales, item_id, engine, conn, cur),)
+                thread_list.append(thread)
 
-        #         cur.execute("INSERT into forecasting_parameters (inventory_item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-        #                     (item_id, firm_id, -1, -1, -1, -1, -1, -1, -1, 0))
-        #         conn.commit()
-        #         cur.close()
-        #         conn.close()
-        #         t = Thread(target=grid.user_inp_grid_search,
-        #                     args=(item_id, firm_id, versa_sm),)
-        #         t.start()
+            for thread in thread_list:
+                thread.start()
+
+            for thread in thread_list:
+                thread.join()
+
+
+        else:
+            print(versa_sales)
+            versa_sales = versa_sales[versa_sales.id ==item_id]
+            check = data_pts_check(versa_sales)
+            if check ==-1:
+                return flask.render_template('main_2.html', result = "More Sales Data is required for this item",items = item_ids)
+            else:
+                thread =  Thread(target=call_grid_search, args=(versa_sales, item_id, engine, conn, cur),)
+                thread.start()
+    
+        return flask.render_template('main_2.html',result = "Request Received! Running different possible model configurations on Historical Sales Data to get best sales forecast.",items = item_ids)
+
+
+@app.route('/predict', methods=['GET', 'POST'])
+def main():
+
+
+    if (flask.request.method == 'GET'):
+        engine = sqlalchemy.create_engine(
+            'postgresql://postgres:bits123@localhost:5432/versa_db')
+
+        query = '''
+        SELECT forecasting_parameters.inventory_item_id
+        FROM forecasting_parameters
+        WHERE forecasting_parameters.firm_id = 568 and forecasting_parameters.flag = 1
+        '''
+
+        item_ids = pd.read_sql_query(query, engine)
+        return flask.render_template('main.html', items = item_ids)
+
+
+    if (flask.request.method == 'POST'):
+        item_id = flask.request.form['item_id']
+        firm_id = flask.request.form['firm_id']
+        item_id = int(item_id)
+        firm_id = int(firm_id)
+  
+        versa_sales = extract_sales_data(firm_id)
+        versa_sales = versa_sales[versa_sales.id ==item_id]
+        versa_sm = grid.data_preprocessing(versa_sales, item_id)
+
         engine = sqlalchemy.create_engine(
             'postgresql://postgres:bits123@localhost:5432/versa_db')
         conn = psycopg2.connect(
@@ -186,139 +296,30 @@ def main2():
             port="5432"
         )
         cur = conn.cursor()
-        versa_sales1 = extract_data()
-        versa_sales1 = versa_sales1[versa_sales1['firm_id'] == 182]
-        unique_id = versa_sales1['id'].unique()
-        print(unique_id)
-        thread_list = []
-        for item_id in unique_id:
-            thread = Timer(4233600, call_grid_search, args=(
-                versa_sales1, item_id, engine, conn, cur),)
-            thread_list.append(thread)
-        for thread in thread_list:
-            thread.start()
-        for thread in thread_list:
-            thread.join()
-        cur.close()
-        conn.close()
-        return "<script type=text/javascript> alert('200! Request Received') </script>"
-
-
-@app.route('/predict', methods=['GET', 'POST'])
-def main():
-    if (flask.request.method == 'GET'):
-        return (flask.render_template('main.html'))
-    if (flask.request.method == 'POST'):
-        item_id = flask.request.form['item_id']
-        firm_id = flask.request.form['firm_id']
-
-        item_id = int(item_id)
-        firm_id = int(firm_id)
-        engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
 
         query1 = '''
-		SELECT *
-		FROM inventory_transaction_details
-		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.id = '%(item_id)d'
-		ORDER BY inventory_item_id;
-		''' % {'item_id': item_id}
+        SELECT forecasting_parameters.inventory_item_id
+        FROM forecasting_parameters
+        WHERE firm_id = 568 and forecasting_parameters.flag = 1
+        '''
 
-        query2 = '''
-		SELECT *
-		FROM inventory_transaction_details
-		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
-		ORDER BY inventory_item_id;
-		''' % {'firm_id': firm_id}
+        item_ids = pd.read_sql_query(query1, engine)
+        query = '''
+        SELECT *
+        FROM sales_predictions
+        WHERE item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': int(item_id), 'firm_id': int(firm_id)}
+    
+        # SQL injection
+        para_table = pd.read_sql_query(query, engine)
 
-        if item_id != -1:
-            versa_sales = pd.read_sql_query(query1, engine)
-        else:
-            versa_sales = pd.read_sql_query(query2, engine)
-
-        # query='''
-        # SELECT *
-        # FROM inventory_transaction_details
-        # INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id
-        # ORDER BY inventory_item_id;
-        # '''
-
-        # versa_sales = pd.read_sql_query(query, engine)
-        versa_sales1 = versa_sales[versa_sales["delta"] < 0]
-        print(versa_sales1)
-        versa_sales1["delta"] = versa_sales1["delta"].abs()
-        # if item_id!=-1:
-        # 	versa_sales1 = versa_sales1[(versa_sales1["inventory_item_id"]==item_id)]
-        # if firm_id!=-1:
-        # 	versa_sales1 = versa_sales1[(versa_sales1["firm_id"]==firm_id)]
-        # cols = [2, 3, 4]
-        # versa_sales1 = versa_sales1[versa_sales1.columns[cols]]
-        # versa_sales2 = versa_sales1.groupby(
-        #     versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
-        # print(versa_sales2)
-        # cols=[2,3,4]
-        # versa_sales1=versa_sales1[versa_sales1.columns[cols]]
-        # versa_sales1["delta"]=versa_sales1["delta"].abs()
-        # versa_sales2=versa_sales1.groupby(versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
-        versa_sm = grid.data_preprocessing(versa_sales1, item_id)
-        # flag = 0
-        # current_time = datetime.now()
-        # versa_maxyear = (versa_sales2.transaction_date.max()).year
-        # if current_time.year-versa_maxyear > 1:
-        #     flag = -1
-        #     print(flag)
-        #     # return 0
-        # r = pd.date_range(start=versa_sales2.transaction_date.min(
-        # ), end=versa_sales2.transaction_date.max(), freq='MS')
-        # #r = pd.date_range(start=versa_sales2.transaction_date.min(), end=datetime.now())
-        # versa_sales3 = versa_sales2.set_index('transaction_date').reindex(
-        #     r).fillna(0.0).rename_axis('transaction_date').reset_index()
-
-        # versa_sales_monthly = versa_sales3.groupby(
-        #     versa_sales3.transaction_date.dt.to_period("M")).agg({'delta': np.sum})
-        # versa_sales_monthly["date"] = versa_sales_monthly.index
-        # versa_sales_monthly2 = versa_sales_monthly.reset_index(inplace=True)
-        # versa_sales_monthly = versa_sales_monthly.drop('date', axis=1)
-
-        # versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(
-        #     str)
-        # versa_sales_monthly['transaction_date'] = pd.to_datetime(
-        #     versa_sales_monthly['transaction_date'])
-        # versa_sm = versa_sales_monthly.set_index('transaction_date')
-        if (len(versa_sm.index)) < 12:
-            print(-1)
-            return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result="More Historical Sales Data required ",)
-        # engine=sqlalchemy.create_engine('postgresql://postgres:bits123@18.216.156.245:5432/versa_db')
-        # query='''
-        # SELECT *
-        # FROM forecasting_parameters
-        # WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' %{'item_id': item_id, 'firm_id': firm_id}
-        # #SQL injection
-        # para_table= pd.read_sql_query(query, engine)
-        # if len(para_table.index)==1:
-        # 	flag=para_table.loc[para_table['inventory_item_id'] == item_id, 'flag'].iloc[0]
-        # 	if flag==0:
-        # 		print("Prediction engine is searching for the best parameters")
-        # 	elif flag==1:
-        # 		print("Parameter search already done, click predict")
-        # 	return 0;
-        # conn = psycopg2.connect(
-        # 	database="versa_db",
-        # 	user="postgres",
-        # 	password="bits123",
-        # 	host="18.216.156.245",
-        # 	port="5432"
-        # 	)
-        # cur= conn.cursor()
-
-        # cur.execute("INSERT into forecasting_parameters (inventory_item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",(item_id,firm_id,-1,-1,-1,-1,-1,-1,-1,0))
-        # conn.commit()
-        # cur.close()
-        # conn.close()
+        if para_table.empty:
+            cur.execute("INSERT into sales_predictions (item_id, firm_id, predictions) values (%s,%s,%s)",
+                        (int(item_id), int(firm_id), -1))
+        
         res = pred.sales_forecast(item_id, firm_id, versa_sm)
         results = json.loads(res)
         print(res)
-        return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id}, result=results['data'],)
+        return flask.render_template('main.html', original_input={'item_id': item_id, 'firm_id': firm_id},items=item_ids, result=results['data'],)
 
 # class fc(Resource):
 #     def get(self, first_number, second_number):
@@ -338,81 +339,90 @@ def main3():
             'postgresql://postgres:bits123@localhost:5432/versa_db')
 
         query = '''
-		SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currency_name
-		FROM inventory_transaction_details
-		INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
-		ORDER BY inventory_item_id;
-		''' % {'firm_id': firm_id}
-        versa_sales = pd.read_sql_query(query, engine)
-        versa_sales['transaction_date'] = pd.to_datetime(
-            versa_sales['transaction_date'], errors='coerce')
-        versa_sales = versa_sales[versa_sales["delta"] < 0]
-        versa_sales["delta"] = versa_sales["delta"].abs()
-        versa_sales = versa_sales.drop(['firm_id'], axis=1)
-        versa_sales['transaction_date'] = versa_sales.transaction_date.dt.to_period(
+        SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currency_name
+        FROM inventory_transaction_details
+        INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
+        ORDER BY inventory_item_id;
+        ''' % {'firm_id': firm_id}
+        data_abc = pd.read_sql_query(query, engine)
+        data_abc['transaction_date'] = pd.to_datetime(
+            data_abc['transaction_date'], errors='coerce')
+        data_abc = data_abc[data_abc["delta"] < 0]
+        data_abc["delta"] = data_abc["delta"].abs()
+        data_abc = data_abc.drop(['firm_id'], axis=1)
+        data_abc['transaction_date'] = data_abc.transaction_date.dt.to_period(
             "M")
-        versa_sales = versa_sales.groupby(
+        # data_abc = data_abc[data_abc==firm_id]
+        data_abc = data_abc.groupby(
             ['id', 'part_number', 'price', 'currency_id', 'currency_name', 'transaction_date'], as_index=False).sum()
-        # obsolete_items = versa_sales[versa_sales['transaction_date']<'2018-01-01']
+        # obsolete_items = data_abc[data_abc['transaction_date']<'2018-01-01']
         today = pd.to_datetime("today")
         obsolete_time = (today - pd.DateOffset(years=2)).to_period("M")
-        versa_sales = versa_sales[versa_sales['transaction_date']
+        data_abc = data_abc[data_abc['transaction_date']
                                   > obsolete_time]
 
         # non-stocked items
-        # versa_sales = versa_sales[versa_sales['transaction_date']>'2019-01-01']
+        # data_abc = data_abc[data_abc['transaction_date']>'2019-01-01']
 
-        no_of_items = len(versa_sales)
+        no_of_items = len(data_abc)
 
         # abc analysis
-        versa_sales['revenue'] = versa_sales.price * versa_sales.delta
-        versa_sales_abc = versa_sales.sort_values(
+        print(data_abc)
+        data_abc['revenue'] = data_abc.price * data_abc.delta
+        versa_sales_abc = data_abc.sort_values(
             by='revenue', ascending=False)
         A, B, C = np.split(versa_sales_abc, [
                            int(.2*no_of_items), int(.5*no_of_items)])
 
         # HML analysis
 
-        versa_sales_hml = versa_sales.sort_values(by='delta', ascending=False)
+        versa_sales_hml = data_abc.sort_values(by='delta', ascending=False)
         high, medium, low = np.split(
             versa_sales_hml, [int(.2*no_of_items), int(.5*no_of_items)])
         # tables
         ha = pd.merge(high, A, how='inner')
         ha_len = len(ha)
-        ha_value = ha['revenue'].sum().astype(int)
-        ha_demand = ha['delta'].mean().astype(int)
+        ha_value = int(ha['revenue'].sum())
+        ha_demand =int(ha['delta'].mean())
         hb = pd.merge(high, B, how='inner')
         hb_len = len(hb)
-        hb_value = hb['revenue'].sum().astype(int)
-        hb_demand = hb['delta'].mean().astype(int)
+        hb_value = int(hb['revenue'].sum())
+        hb_demand =int(hb['delta'].mean())
         hc = pd.merge(high, C, how='inner')
         hc_len = len(hc)
-        hc_value = hc['revenue'].sum().astype(int)
-        hc_demand = hc['delta'].mean().astype(int)
+        hc_value = int(hc['revenue'].sum())
+        hc_demand =int(hc['delta'].mean())
         ma = pd.merge(medium, A, how='inner')
         ma_len = len(ma)
-        ma_value = ma['revenue'].sum().astype(int)
-        ma_demand = ma['delta'].mean().astype(int)
+        ma_value = int(ma['revenue'].sum())
+        ma_demand =int(ma['delta'].mean())
         mb = pd.merge(medium, B, how='inner')
         mb_len = len(mb)
-        mb_value = mb['revenue'].sum().astype(int)
-        mb_demand = mb['delta'].mean().astype(int)
+        mb_value = int(mb['revenue'].sum())
+        mb_demand =int(mb['delta'].mean())
         mc = pd.merge(medium, C, how='inner')
         mc_len = len(mc)
-        mc_value = mc['revenue'].sum().astype(int)
-        mc_demand = mc['delta'].mean().astype(int)
+        mc_value = int(mc['revenue'].sum())
+        mc_demand =int(mc['delta'].mean())
         la = pd.merge(low, A, how='inner')
-        la_len = len(la)
-        la_value = la['revenue'].sum().astype(int)
-        la_demand = la['delta'].mean().astype(int)
+
+        if not la.empty:
+            la_len = len(la)
+            la_value = int(la['revenue'].sum())
+            la_demand =int(la['delta'].mean())
+        else:
+            la_demand = 0 
+            la_len= 0
+            la_value = 0
+
         lb = pd.merge(low, B, how='inner')
         lb_len = len(lb)
-        lb_value = lb['revenue'].sum().astype(int)
-        lb_demand = lb['delta'].mean().astype(int)
+        lb_value = int(lb['revenue'].sum())
+        lb_demand =int(lb['delta'].mean())
         lc = pd.merge(low, C, how='inner')
         lc_len = len(lc)
-        lc_value = lc['revenue'].sum().astype(int)
-        lc_demand = lc['delta'].mean().astype(int)
+        lc_value = int(lc['revenue'].sum())
+        lc_demand =int(lc['delta'].mean())
 
         items = {
             'ha_len': ha_len,
@@ -452,6 +462,8 @@ def main3():
             'lc_demand': lc_demand,
         }
         return flask.render_template('main3.html', original_input={'firm_id': firm_id}, items=items, values=values, demand=demand, tables=[la.to_html(classes='data', header="true"), ma.to_html(classes='data', header="true"), ha.to_html(classes='data', header="true"), lb.to_html(classes='data', header="true"), mb.to_html(classes='data', header="true"), hb.to_html(classes='data', header="true"), lc.to_html(classes='data', header="true"), mc.to_html(classes='data', header="true"), hc.to_html(classes='data', header="true")], titles=['na', 'Low and A', 'Medium and A', 'High and A', 'Low and B', 'Medium and B', 'High and B', 'Low and C', 'Medium and C', 'High and C'],)
+
+
 
 
 if __name__ == '__main__':

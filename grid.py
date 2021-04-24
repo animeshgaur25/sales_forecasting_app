@@ -1,4 +1,6 @@
 import psycopg2
+import flask
+import random
 import sqlalchemy
 from statsmodels.tsa.stattools import adfuller
 from sklearn.metrics import mean_squared_error
@@ -23,6 +25,7 @@ from statsmodels.tsa.stattools import acf, pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 register_matplotlib_converters()
 
+app = flask.Flask(__name__, template_folder='templates')
 
 def parser(s):
     return datetime.strptime(s, '%Y-%m-%d')
@@ -37,18 +40,30 @@ def data_pts_chk(num):
 # Ho: It is non stationary
     #H1: It is stationary
 
+# def difference(dataset):
+#     diff = list()
+#     for i in range(1, len(dataset)):
+#         value = dataset[i] - dataset[i - 1]
+#         #print(value)
+#         diff.append(value)
+#     return pd.Series(diff)
 
 def adfuller_test(sales):
-    result = adfuller(sales)
+    try:
+        result = adfuller(sales)
+    except ValueError:
+        return -1
+
+
     labels = ['ADF Test Statistic', 'p-value',
               '#Lags Used', 'Number of Observations Used']
     for value, label in zip(result, labels):
         print(label+' : '+str(value))
     if result[1] <= 0.05:
-        #print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
+        print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
         return 1
     else:
-        #print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
+        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
         return 0
 
 
@@ -56,7 +71,7 @@ def sarima_configs(seasonal=[0]):
     models = list()
     # define config lists
     p_params = [0, 1, 2]
-    d_params = [1]
+    d_params = [0,1]
     q_params = [0, 1, 2]
     P_params = [0, 1]
     D_params = [0, 1]
@@ -72,44 +87,39 @@ def sarima_configs(seasonal=[0]):
                             for m in m_params:
                                 cfg = [(p, d, q), (P, D, Q, m)]
                                 models.append(cfg)
+    models = random.sample(models, 50)
     return models
 
 def data_preprocessing(versa_sales1, item_id):
-    versa_sales1 = versa_sales1[versa_sales1.id==item_id]
-    
-    if len(versa_sales1) > 12:
-        versa_sales1['transaction_date'] = pd.to_datetime(versa_sales1['transaction_date'], errors='coerce')
-        versa_sales1['transaction_date'] = versa_sales1['transaction_date'].dropna()
-        versa_sales1 = versa_sales1.drop(columns=['firm_id'])
-        versa_sales2 = versa_sales1.groupby(
-            versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
+    versa_sales1['transaction_date'] = pd.to_datetime(versa_sales1['transaction_date'], errors='coerce')
+    versa_sales1['transaction_date'] = versa_sales1['transaction_date'].dropna()
+    versa_sales1 = versa_sales1.drop(columns=['firm_id'])
+    versa_sales1["transaction_date"] = versa_sales1.transaction_date.to_numpy().astype('datetime64[M]')
+    versa_sales2 = versa_sales1.groupby(versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
+    flag = 0
+    current_time = datetime.now()
+    versa_maxyear = (versa_sales2.transaction_date.max()).year
+    # if current_time.year-versa_maxyear > 1:
+    #     flag = -1
+    #     print(flag)
+    #     return -1
+    r = pd.date_range(start=versa_sales2.transaction_date.min(), end=versa_sales2.transaction_date.max(), freq='MS')
+    #r = pd.date_range(start=versa_sales2.transaction_date.min(), end=datetime.now())
 
-        flag = 0
-        current_time = datetime.now()
-        versa_maxyear = (versa_sales2.transaction_date.max()).year
-        if current_time.year-versa_maxyear > 1:
-            flag = -1
-            print(flag)
-            # return 0
-        r = pd.date_range(start=versa_sales2.transaction_date.min(
-        ), end=versa_sales2.transaction_date.max(), freq='MS')
-        #r = pd.date_range(start=versa_sales2.transaction_date.min(), end=datetime.now())
-        versa_sales3 = versa_sales2.set_index('transaction_date').reindex(
-            r).fillna(0.0).rename_axis('transaction_date').reset_index()
+    versa_sales3 = versa_sales2.set_index('transaction_date').reindex(r , fill_value=0).rename_axis('transaction_date').reset_index()
+    versa_sales_monthly = versa_sales3.groupby(versa_sales3.transaction_date.dt.to_period("M")).agg({'delta': np.sum})
+    # print(versa_sales3)
+    versa_sales_monthly["date"] = versa_sales_monthly.index
+    versa_sales_monthly2 = versa_sales_monthly.reset_index(inplace=True)
+    versa_sales_monthly = versa_sales_monthly.drop('date', axis=1)
 
-        versa_sales_monthly = versa_sales3.groupby(versa_sales3.transaction_date.dt.to_period("M")).agg({'delta': np.sum})
-        # print(versa_sales3)
-        versa_sales_monthly["date"] = versa_sales_monthly.index
-        versa_sales_monthly2 = versa_sales_monthly.reset_index(inplace=True)
-        versa_sales_monthly = versa_sales_monthly.drop('date', axis=1)
-
-        versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(
-            str)
-        versa_sales_monthly['transaction_date'] = pd.to_datetime(
-            versa_sales_monthly['transaction_date'])
-        versa_sm = versa_sales_monthly.set_index('transaction_date')
-        print(versa_sm)
-        return versa_sm
+    versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(
+        str)
+    versa_sales_monthly['transaction_date'] = pd.to_datetime(
+        versa_sales_monthly['transaction_date'])
+    versa_sm = versa_sales_monthly.set_index('transaction_date')
+    print(versa_sm)
+    return versa_sm
 
 def sarima_forecast(history, config):
     order, sorder = config
@@ -168,7 +178,7 @@ def score_model(train_data, test_data, cfg, debug=False):
     return (key, result)
 
 
-def grid_search(train_data, test_data, cfg_list, parallel=True):
+def grid_search(train_data, test_data, cfg_list, parallel=False):
     scores = None
     if parallel:
         # execute configs in parallel
@@ -192,66 +202,22 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
     item_id = int(item_id)
     firm_id = int(firm_id)
 
-    # versa_sales = pd.read_csv(r"C:\code\ml_inventory\sales_forecasting-main\data_updated22-09.csv", parse_dates=[4], index_col=0, squeeze=True, date_parser=parser)
-    # versa_sales1 = versa_sales[versa_sales["delta"]<0]
-    # if item_id!=-1:
-    #     versa_sales1 = versa_sales1[(versa_sales1["inventory_item_id"]==item_id)]
-    # if firm_id!=-1:
-    #     versa_sales1 = versa_sales1[(versa_sales1["firm_id"]==firm_id)]
-    # #print(versa_sales1)
-    # cols=[2,3,4]
-    # versa_sales1=versa_sales1[versa_sales1.columns[cols]]
-    # versa_sales1["delta"]=versa_sales1["delta"].abs()
-    # versa_sales2=versa_sales1.groupby(versa_sales1["transaction_date"], as_index=False).agg({'delta': np.sum})
-    # #if versa_sales2["id"].count()<12:
-    # #    return "error"
-    # r = pd.date_range(start=versa_sales2.transaction_date.min(), end=versa_sales2.transaction_date.max())
-    # versa_sales3=versa_sales2.set_index('transaction_date').reindex(r).fillna(0.0).rename_axis('transaction_date').reset_index()
-
-    # versa_sales_monthly = versa_sales3.groupby(versa_sales3.transaction_date.dt.to_period("M")).agg({'delta': np.sum})
-    # versa_sales_monthly["date"]=versa_sales_monthly.index
-    # versa_sales_monthly2=versa_sales_monthly.reset_index(inplace = True)
-    # versa_sales_monthly=versa_sales_monthly.drop('date',axis=1)
-
-    # versa_sales_monthly.transaction_date = versa_sales_monthly.transaction_date.map(str)
-    # versa_sales_monthly['transaction_date']=pd.to_datetime(versa_sales_monthly['transaction_date'])
-    # versa_sm=versa_sales_monthly.set_index('transaction_date')
-    first_diff = versa_sm.diff()[1:]
-    print("versa_sm")
-    # flag =0
-    # current_time = datetime.now()
-    # versa_maxyear = (versa_sales2.transaction_date.max()).year
-    # if current_time.year-versa_maxyear > 1:
-    #     flag = -1
-    #     print(flag)
-    #     return 0
-
-    # SHOULD CHANGE THE CODE..ROUGH CODE TO SELECT THE DATAFRAME TO TAKE AS TRAIN AND TEST
-    d = -1
-    test_result = adfuller(versa_sm["delta"])
+    d = 0
     stationary = adfuller_test(versa_sm['delta'])
-    if stationary == 1:
-        # train_data = versa_sm[(versa_sm.index<'2020-01-01 00:00:00')]
-        # test_data = versa_sm[(versa_sm.index>='2020-01-01 00:00:00')]
-        d = 0
-        train_data, test_data = train_test_split(
-            versa_sm, shuffle=False, test_size=0.2)
-    else:
-        test_result = adfuller(first_diff["delta"])
-        stationary = adfuller_test(first_diff['delta'])
-        if stationary == 1:
-            # train_data = first_diff[(first_diff.index<'2020-01-01 00:00:00')]
-            # test_data = first_diff[(first_diff.index>='2020-01-01 00:00:00')]
-            d = 1
-            train_data, test_data = train_test_split(
-                first_diff, shuffle=False, test_size=0.2)
-        else:
-            d = 2
-            train_data, test_data = train_test_split(
-                first_diff, shuffle=False, test_size=0.2)
+    if stationary==-1:
+        print("More Sales Data is required for this item")
+        return "More Sales Data is required for this item"
 
-    # train_data = versa_sm[(versa_sm.index<'2014-05-01')]
-    # test_data = versa_sm[(versa_sm.index>='2014-05-01')]
+    elif stationary == 1:
+        train_data, test_data = train_test_split(versa_sm, shuffle=False, test_size=0.2)
+        
+    else:
+        d= 1
+        versa_sm = versa_sm.diff()[1:]
+        train_data, test_data = train_test_split(versa_sm, shuffle=False, test_size=0.2)
+
+
+
     cfg_list = sarima_configs(seasonal=[0, 2, 3, 4, 6, 9, 12])
     # grid search
     scores = grid_search(train_data, test_data, cfg_list)
