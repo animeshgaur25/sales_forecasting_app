@@ -33,8 +33,8 @@
     .result {
       margin: auto;
       text-align: center;
-      display: 
-      -webkit-inline-box;
+      display:
+        -webkit-inline-box;
       width: 60vh;
       height: 80vh;
     }
@@ -82,644 +82,26 @@
 
 <body>
 
-  <div class="navbar">
-    <div class="navbar-inner">
-      <div class="container">
-        <div class="topNav clearfix">
-          <div class="pull-left">
-            <a href="/dashboard" class="brand">
-              <img src="/static/valogo4-white_sm.png" alt="VersAccounts" logo" title="Home page" />
-            </a>
-          </div>
-          <input id="uri" name="uri" type="hidden" value="/user" />
-
-          <ul class="topMenu pull-right">
-            <li><select class="span3 top-select" id="facility" name="facility">
-                <option selected="selected" value="1153">MTL-Montreal Port Yard
-                </option>
-              </select></li>
-            <script>
-              jQuery(document).ready(function () {
-                // Old action was facility#set_facility
-
-                $('select#facility').change(function () {
-                  var $facilityID = $(this).val();
-                  var url = $('input#uri').val() + '?new_facility=' + $facilityID;
-                  window.location.assign(url);
-                  return false
-                });
-
-              });
-            </script>
-
-            <li class="top-company-name hidden-phone">The Rail Yard</li>
-            <li>
-              <div class="btn-group user-account-dropdown">
-                <a class="btn dropdown-toggle " data-toggle="dropdown" href="#">
-                  <i class='fa fa-user'></i> Hi bitspilanips
-                  <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu ">
-                  <li> <a href="/user/user_account_management"><i class='fa fa-cog'></i> Account
-                      Settings</a></li>
-                  <li> <a href="/user_preferences"><i class='fa fa-cog'></i> User Preference</a></li>
-                  <li> <a href="/login/logout"><i class='fa fa-signout'></i> Log out</a></li>
-                </ul>
-              </div>
-            </li>
-          </ul>
-        </div><!-- end topNav -->
-
-
-
-        <div id="main-nav">
-          <!-- These are the top-level tabs that show what controller is being used. -->
-          <div id="secondaryNavContainer">
-            <div class="secondaryNav">
-              <!-- / -->
-              <!-- / required params: :user, :ctrl -->
-              <!-- / -->
-              <ul id='menu'>
-                <li>
-                  <a href='/dashboard'>
-                    Dashboard
-                  </a>
-                </li>
-                <li>
-                  <a href='/powerbi'>
-                    Inventory
-                  </a>
-                </li>
-                <li class='current'>
-                  <a class='drop' href='#'>
-                    Customers
-                  </a>
-                  <div class='dropdown_1column'>
-                    <div class='col_1'>
-                      <a href="/customer_bill_tos/new"><i class="fa fa-plus"></i> New Customer</a>
-                      <a href="/customer_bill_tos/new_from_party"><i class="fa fa-plus"></i> New
-                        From Party</a>
-                      <a href="/customer_bill_tos"><i class="fa fa-list-alt"></i> List</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='current'>
-                  <a class='drop' href='#'>
-                    Invoices
-                  </a>
-                  <div class='dropdown_5columns'>
-                    <div class='col_1'>
-                      <a href="/invoices/new"><i class="fa fa-plus"></i> New Invoice</a>
-                      <a href="/payment_receipts/new"><i class='fa fa-check'></i> Receive
-                        Payment</a>
-                      <a href="/invoices/aging_reports"><i class='fa fa-list-alt'></i> Aging
-                        Reports</a>
-                      <a href="/invoices/pit_home_currency_aging_report"><i class='fa fa-list-alt'></i> Aging Reports
-                        (As
-                        Of)</a>
-                      <a href="/invoices/pit_nominal_aging_report"><i class='fa fa-list-alt'></i>
-                        Aging Reports (with Currencies)</a>
-                      <a href="/invoices/tax_report"><i class='fa fa-list-alt'></i> Tax Report</a>
-                      <a href="/payment_receipts"><i class='fa fa-list-alt'></i> List Payments</a>
-                      <a href="/batch_emails"><i class='fa fa-list-alt'></i> Batch Email/Print</a>
-                      <h3>Receipt Batches</h3>
-                      <a href="/payment_receipt_batches"><i class='fa fa-list-alt'></i> List
-                        Batches</a>
-                      <a href="/payment_receipt_batches/undeposited_funds_report"><i class='fa fa-list-alt'></i>
-                        Undeposited Funds</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Customers</h3>
-                      <a href="/customer_bill_tos/new"><i class="fa fa-plus"></i> New Customer</a>
-                      <a href="/customer_bill_tos/new_from_party"><i class="fa fa-plus"></i> New
-                        From Party</a>
-                      <a href="/customer_bill_tos"><i class="fa fa-list-alt"></i> List</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>List Invoices</h3>
-                      <a href="/invoices"><i class='fa fa-list'></i> All</a>
-                      <a href="/invoices/unpaid"><i class='fa fa-filter'></i> Unpaid</a>
-                      <a href="/invoices/by_total"><i class='fa fa-filter'></i> By Total</a>
-                      <a href="/invoices/by_age"><i class='fa fa-filter'></i> By Age</a>
-                      <a href="/invoices/by_customer2"><i class='fa fa-filter'></i> By
-                        Customer</a>
-                      <a href="/invoices/totals_by_customer"><i class='fa fa-filter'></i> Totals /
-                        Customer</a>
-                      <a href="/invoices/by_period"><i class='fa fa-filter'></i> By Period</a>
-                      <a href="/invoices/print_batch"><i class='fa fa-filter'></i> Batch Print</a>
-                    </div>
-                    <div class='col_2'>
-                      <h3>Voided Items</h3>
-                      <a href="/invoices/voided"><i class='fa fa-times-circle'></i> Invoices</a>
-                      <a href="/payment_receipts/voided"><i class='fa fa-times-circle'></i>
-                        Payment Receipts</a>
-                      <h3>Pending Revenue</h3>
-                      <a href="/order_shipments/uninvoiced"><i class='fa fa-money'></i> Uninvoiced
-                        Shipments</a>
-                      <h3>Help</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021858694-11-How-to-Create-a-New-Sales-Invoice"
-                        target="_new"><i class='fa fa-question-circle'></i> Invoicing
-                        Introduction</a>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <a class='drop' href='#'>
-                    Bills
-                  </a>
-                  <div class='dropdown_4columns'>
-                    <div class='col_1'>
-                      <a href="/bills/new"><i class="fa fa-plus"></i> New Bill</a>
-                      <a href="/payment_disbursements/new"><i class='fa fa-money'></i> Make
-                        Payment</a>
-                      <a href="/payment_disbursement_batches/new"><i class='fa fa-plus'></i> New
-                        Pmt Batch</a>
-                      <a href="/payment_disbursement_batches"><i class='fa fa-list'></i> Payment
-                        Batches</a>
-                      <a href="/payment_disbursements"><i class='fa fa-list-alt'></i> List
-                        Payments</a>
-                      <a href="/bills/aging_reports"><i class='fa fa-list-alt'></i> Aging
-                        Reports</a>
-                      <a href="/bills/pit_home_currency_aging_report"><i class='fa fa-list-alt'></i> Aging Reports (As
-                        Of)</a>
-                      <a href="/bills/pit_nominal_aging_report"><i class='fa fa-list-alt'></i>
-                        Aging Reports (with Currencies)</a>
-                      <a href="/bills/tax_report"><i class='fa fa-list-alt'></i> Tax Report</a>
-                      <a href="/bill_batches/new"><i class='fa fa-plus'></i> New Bill Batch</a>
-                      <a href="/bill_batches"><i class='fa fa-list'></i> Bill Batches</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Suppliers</h3>
-                      <a href="/suppliers/new"><i class="fa fa-plus"></i> New Supplier</a>
-                      <a href="/suppliers/new_from_party"><i class="fa fa-plus"></i> New From
-                        Party</a>
-                      <a href="/suppliers"><i class='fa fa-list-alt'></i> List</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>List Bills</h3>
-                      <a href="/bills"><i class='fa fa-list'></i> All</a>
-                      <a href="/bills/unposted"><i class='fa fa-filter'></i> Unposted</a>
-                      <a href="/bills/unpaid"><i class='fa fa-filter'></i> Unpaid</a>
-                      <a href="/bills/by_total"><i class='fa fa-filter'></i> By Total</a>
-                      <a href="/bills/by_age"><i class='fa fa-filter'></i> By Age</a>
-                      <a href="/bills/totals_by_supplier"><i class='fa fa-filter'></i> Totals /
-                        Supplier</a>
-                      <a href="/bills/by_supplier_2"><i class='fa fa-filter'></i> By Supplier</a>
-                      <a href="/bills/by_period"><i class='fa fa-filter'></i> By Period</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Voided Items</h3>
-                      <a href="/bills/voided"><i class='fa fa-times-circle'></i> Bills</a>
-                      <a href="/payment_disbursements/voided"><i class='fa fa-times-circle'></i>
-                        Bill Payments</a>
-                      <h3>Pending</h3>
-                      <a href="/shipment_receipts/pending_linking_to_bills"><i class='fa fa-list'></i> Receipts Pending
-                        Bills</a>
-                      <h3>Help</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022057313-13-How-to-Create-a-New-Bill"
-                        target="_new"><i class='fa fa-question-circle'></i> Bills
-                        Introduction</a>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <a class='drop' href='#'>
-                    Products
-                  </a>
-                  <div class='dropdown_4columns'>
-                    <div class='col_1'>
-                      <h3>Product/Inventory</h3>
-                      <a href="/parts/new"><i class="fa fa-plus"></i> New Product</a>
-                      <a href="/products/list_products"><i class='fa fa-list-alt'></i> List
-                        Products</a>
-                      <a href="/products_catalog"><i class='fa fa-list-alt'></i> Product
-                        Catalog</a>
-                      <a href="/parts"><i class="fa fa-list-alt"></i> List Inventoried
-                        Products</a>
-
-                      <a href="/inventory_items/profile"><i class="fa fa-tasks"></i> Inventory
-                        Profile</a>
-                      <a href="/products/price_list_report?type=products"><i class="fa fa-print"></i> Print Price
-                        List</a>
-                      <a href="/parts/part_search"><i class="fa fa-search"></i> Part Search</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Substitutes</h3>
-                      <a href="/substitute_products/new"><i class="fa fa-plus"></i> New
-                        Substitute</a>
-                      <a href="/substitute_products"><i class='fa fa-list-alt'></i> List</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Kits</h3>
-                      <a href="/kit_items/new"><i class="fa fa-plus"></i> New Kit</a>
-                      <a href="/kit_items"><i class='fa fa-list-alt'></i> List</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Services</h3>
-                      <a href="/products/new?type=service"><i class="fa fa-plus"></i> New
-                        Service</a>
-                      <a href="/products/list_services"><i class='fa fa-list-alt'></i> List</a>
-                      <a href="/products/service_search"><i class='fa fa-search'></i> Search</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Bills-of-Material</h3>
-                      <a href="/boms/new"><i class="fa fa-plus"></i> Edit BOM</a>
-                      <a href="/boms"><i class='fa fa-list-alt'></i> List BOMs</a>
-                      <a href="/production_builds/new"><i class='fa fa-wrench'></i> New Build</a>
-                      <a href="/production_builds"><i class='fa fa-tasks'></i> List Builds</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Inventory Tools</h3>
-                      <a href="/user/physical_inventory_worksheet"><i class="fa fa-file-alt"></i>
-                        Physical Wks</a>
-                      <a href="/inventory_item_variances/new"><i class="fa fa-wrench"></i> New
-                        Adjustment</a>
-                      <a href="/inventory_item_variances"><i class="fa fa-list-alt"></i>
-                        Adjustments</a>
-                      <a href="/products/reorder_report"><i class="fa fa-file-text"></i> Reorder
-                        Report</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Setup</h3>
-                      <a href="/measurement_units"><i class='fa fa-archive'></i> Units of
-                        Measure</a>
-                      <a href="/product_categories"><i class='fa fa-gears'></i> Categories</a>
-                      <a href="/inventory_item_variance_reasons"><i class="fa fa-question"></i>
-                        Variance Reasons</a>
-                      <a href="/qualifying_regexes"><i class="fa fa-barcode"></i> Field
-                        Qualifiers</a>
-                      <a href="/facilities"><i class="fa fa-building"></i> Facilities</a>
-                      <h3>Help</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021860014-05-How-to-Create-a-New-Product"
-                        target="_new"><i class='fa fa-question-circle'></i> Create New
-                        Product</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360035864913-15-How-to-Setup-Facility-to-Store-Inventory"
-                        target="_new"><i class='fa fa-question-circle'></i> How to Setup
-                        Facility</a>
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <a class='drop' href='#'>
-                    Projects
-                  </a>
-                  <div class='dropdown_2columns'>
-                    <div class='col_1'>
-                      <h3>
-                        <a href="/projects"><i class='fa fa-list-alt'></i> Projects</a>
-                      </h3>
-                      <a href="/projects?status=Scheduled+Pending+Start"><i class='fa fa-list-alt'></i> Pending
-                        Start</a>
-                      <a href="/projects?status=In+Process"><i class='fa fa-list-alt'></i> In
-                        Process</a>
-                      <a href="/projects?status=Completed"><i class='fa fa-list-alt'></i>
-                        Completed</a>
-                      <a href="/projects?status=On+Hold"><i class='fa fa-list-alt'></i> On
-                        Hold</a>
-                      <a href="/projects?status=Cancelled"><i class='fa fa-list-alt'></i>
-                        Cancelled</a>
-                      <a href="/projects?schedule=true&amp;status=Scheduled+Pending+Start"><i class='fa fa-time'></i>
-                        Pending Start</a>
-                      <a href="/projects?schedule=true&amp;status=In+Process"><i class='fa fa-time'></i> In Process</a>
-                      <a href="/projects?schedule=true&amp;status=Completed"><i class='fa fa-time'></i> Completed</a>
-                      <h3>
-                        <a href="/work_orders"><i class='fa fa-list-alt'></i> Work Orders</a>
-                      </h3>
-                      <a href="/work_orders?status=Pending+Start"><i class='fa fa-list-alt'></i>
-                        Pending Start</a>
-                      <a href="/work_orders?status=In+Process"><i class='fa fa-list-alt'></i> In
-                        Process</a>
-                      <a href="/work_orders?status=Completed"><i class='fa fa-list-alt'></i>
-                        Completed</a>
-                      <a href="/work_orders?status=On+Hold"><i class='fa fa-list-alt'></i> On
-                        Hold</a>
-                      <a href="/work_orders?status=Cancelled"><i class='fa fa-list-alt'></i>
-                        Cancelled</a>
-                      <a href="/work_orders?schedule=true&amp;status=Pending+Start"><i class='fa fa-time'></i> Pending
-                        Start</a>
-                      <a href="/work_orders?schedule=true&amp;status=In+Process"><i class='fa fa-time'></i> In
-                        Process</a>
-                      <a href="/work_orders?schedule=true&amp;status=Completed"><i class='fa fa-time'></i> Completed</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>
-                        <a href="/team_members">Team Members</a>
-                      </h3>
-                      <a href="/team_members/new"><i class="fa fa-plus"></i> New Member</a>
-                      <a href="/team_members/new_from_existing_party"><i class="fa fa-plus"></i>
-                        New from Party</a>
-                      <a href="/team_members"><i class='fa fa-list-alt'></i> List</a>
-                      <a href="/project_roles"><i class='fa fa-user'></i> Project Roles</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>
-                        <a href="/timesheets">Timesheets</a>
-                      </h3>
-                      <a href="/timesheets/new"><i class="fa fa-plus"></i> New Timesheet</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    Orders
-                  </a>
-                  <div class='dropdown_3columns'>
-                    <div class='col_1'>
-                      <h3>Purchase Orders</h3>
-                      <a href="/orders/new_purchase_order"><i class="fa fa-plus"></i> New P/O</a>
-                      <a href="/orders/new_purchase_order_by_part_number"><i class="fa fa-plus"></i> New by P/N</a>
-                      <a href="/purchase_order_generator/new"><i class="fa fa-list-alt"></i> P/O
-                        Planner</a>
-                      <a href="/orders/purchase"><i class='fa fa-list-alt'></i> List All</a>
-                      <a href="/orders/purchase?open=true"><i class='fa fa-list-alt'></i> Open
-                        Orders</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Sales Orders</h3>
-                      <a href="/orders/new_sales_order"><i class="fa fa-plus"></i> New Sales
-                        Order</a>
-                      <a href="/orders/sales"><i class='fa fa-list-alt'></i> List All</a>
-                      <a href="/orders/sales?open=true"><i class='fa fa-list-alt'></i> Open
-                        Orders</a>
-                      <h3>Transfer Orders</h3>
-                      <a href="/orders/new_transfer_order"><i class="fa fa-plus"></i> New Transfer
-                        Order</a>
-                      <a href="/orders/transfer"><i class='fa fa-list-alt'></i> List All</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Quotes</h3>
-                      <a href="/quotes/new"><i class="fa fa-plus"></i> New Quote</a>
-                      <a href="/quotes"><i class='fa fa-list-alt'></i> List All Quotes</a>
-                      <a href="/quotes/quotes_by_status?id=1995"><i class='fa fa-tasks'></i>
-                        Pending Issue</a>
-                      <a href="/quotes/quotes_by_status?id=1996"><i class='fa fa-tasks'></i>
-                        Issued</a>
-                      <a href="/quotes/quotes_by_status?id=1997"><i class='fa fa-tasks'></i>
-                        Won</a>
-                      <a href="/quotes/quotes_by_status?id=1998"><i class='fa fa-tasks'></i>
-                        Lost</a>
-                      <a href="/quote_statuses"><i class='fa fa-pencil'></i> Quote Statuses</a>
-                      <h3>Help</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022058493-09-How-to-Create-a-New-Sales-Order"
-                        target="_new"><i class='fa fa-question-circle'></i> Sales Orders
-                        Intro.</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021860214-07-How-to-Receive-a-Purchase-Order"
-                        target="_new"><i class='fa fa-question-circle'></i> How to Create a
-                        Purchase Order</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360034000794-08-How-to-Create-a-New-Sales-Quote"
-                        target="_new"><i class='fa fa-question-circle'></i> Quotes Intro.</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    Logistics
-                  </a>
-                  <div class='dropdown_2columns'>
-                    <div class='col_1'>
-                      <h3>Shipping</h3>
-                      <a href="/shipments/new"><i class="fa fa-plus"></i> New Shipment</a>
-                      <a href="/shipments/new?transfer=true"><i class="fa fa-plus"></i> Transfer
-                        Shipment</a>
-                      <a href="/listings/outstanding_sales_orders"><i class='fa fa-folder-open'></i> Open S/O's</a>
-                      <a href="/shipments"><i class='fa fa-truck'></i> Order Shipments</a>
-                      <a href="/shipment_batches"><i class='fa fa-truck'></i> Shipment Batches</a>
-                      <a href="/supplier_returns"><i class='fa fa-thumbs-down'></i> Supplier
-                        Returns</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Receiving</h3>
-                      <a href="/receipts/new"><i class="fa fa-plus"></i> New Receipt</a>
-                      <a href="/receipts/new?transfer=true"><i class="fa fa-plus"></i> Transfer
-                        Receipt</a>
-                      <a href="/orders/show_outstanding_purchase_orders"><i class='fa fa-folder-open'></i> Open
-                        P/O's</a>
-                      <a href="/receipts"><i class='fa fa-check'></i> Shipments Rec'd</a>
-                      <a href="/supplier_returns/new"><i class='fa fa-thumbs-down'></i> New Return
-                        Shipment</a>
-                      <a href="/supplier_returns"><i class='fa fa-thumbs-down'></i> Return
-                        Shipments</a>
-                      <a href="/rejection_reasons"><i class='fa fa-question'></i> Rejection
-                        Reasons</a>
-                      <h3>Help</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022058553-10-How-to-Ship-a-Sales-Order"
-                        target="_new"><i class='fa fa-question-circle'></i> How to Ship Sales
-                        Order</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021860214-07-How-to-Receive-a-Purchase-Order"
-                        target="_new"><i class='fa fa-question-circle'></i> How to Receive
-                        Inventory</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    Reports
-                  </a>
-                  <div class='dropdown_2columns'>
-                    <div class='col_1'>
-                      <h3>View Reports</h3>
-                      <a href="/reports">Financial Reports</a>
-                      <a href="/reports/comparative">Comparative Financial</a>
-                      <a href="/reports/operations">All Reports</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Customize</h3>
-                      <a href="/reports/new">Create New</a>
-                      <a href="/reports/edit_index">Edit</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    Setup
-                  </a>
-                  <div class='dropdown_4columns'>
-                    <div class='col_2'>
-                      <h3>Company</h3>
-                      <a href="/admin/edit_company_information">Company Info</a>
-                      <a href="/admin/logo_customization">Company Logo</a>
-                      <a href="/adjustment_types">Adjustments</a>
-                      <a href="/budget_statuses">Budget Statuses</a>
-                      <a href="/budget_types">Budget Types</a>
-                      <a href="/budgets">Budgets</a>
-                      <a href="/entities">Entities</a>
-                      <a href="/accounting_periods">Fiscal Periods</a>
-                      <a href="/accounting_periods/custom_periods">Custom Periods</a>
-                      <a href="/events">Events</a>
-                      <a href="/payment_terms">Payment Terms</a>
-                      <a href="/rma_return_reasons">RMA Return Reasons</a>
-                      <a href="/sales_order_channels">Sales Channels</a>
-                      <a href="/users">User Management</a>
-                      <h3>Integrations</h3>
-                      <a href="/payment_gateways">Credit Card Payment Gateways</a>
-                      <a href="/client_applications">Client Applications</a>
-                      <a href="/webhooks">Webhooks</a>
-                      <h3>Taxes</h3>
-                      <a href="/taxes">Taxes</a>
-                      <a href="/non_taxable_reasons">Non-Taxable Reasons</a>
-                      <a href="/tax_codes">Tax Codes</a>
-                      <a href="/tax_centers">Tax Centers</a>
-                      <a href="/settings/854/edit?filter=taxes">Tax Settings</a>
-                    </div>
-                    <div class='col_2'>
-                      <h3>UI/Feature Settings</h3>
-
-                      <a href="/settings/854/edit?filter=automatic_inventory_adjustment">Auto.
-                        Inventory Adjustment</a>
-                      <a href="/settings/854/edit?filter=bom">Bills Of Material</a>
-                      <a href="/settings/854/edit?filter=bills">Bills</a>
-                      <a href="/settings/854/edit?filter=company">Company Setting</a>
-                      <a href="/settings/854/edit?filter=containers">Containers</a>
-                      <a href="/custom_fields">Custom Fields</a>
-                      <a href="/forms">Custom Forms</a>
-                      <a href="/admin/list_cash_account_cheque_formats">Cheque Formats</a>
-                      <a href="/cheque_number_counters">Cheque Numbers</a>
-
-                      <a href="/settings/854/edit?filter=customer_account_statement">Customer
-                        Statement</a>
-                      <hr>
-                      <a href="/settings/854/edit?filter=document_lifecycle_logging">Document
-                        Lifecycle Logging</a>
-                      <a href="/settings/854/edit?filter=emailing">Emailing</a>
-                      <a href="/settings/854/edit?filter=general_ledger">General Ledger</a>
-                      <a href="/invoice_adjustment_types">Invoice Adjustment Types</a>
-                      <a href="/settings/854/edit?filter=invoicing">Invoices</a>
-                      <a href="/settings/854/edit?filter=labor_and_time_cost_tracking">Labor &amp;
-                        Time Cost Tracking</a>
-                      <a href="/settings/854/edit?filter=outgoing_sales_order_shipments">Outgoing
-                        SO Shipments</a>
-                      <hr>
-                      <a href="/settings/854/edit?filter=payment_disbursements">Payment
-                        Disbursements</a>
-                      <a href="/settings/854/edit?filter=payment_receipts">Payment Receipts</a>
-                      <a href="/product_identification_types">Product Identification Types</a>
-                      <a href="/settings/854/edit?filter=pick_list">Pick List</a>
-                      <a href="/settings/854/edit?filter=price_policies">Price Policies</a>
-                      <a href="/settings/854/edit?filter=purchase_orders">Purchase Orders</a>
-                      <a href="/settings/854/edit?filter=purchase_order_shipment_receipts">PO
-                        Shipment Receipts</a>
-                      <a href="/settings/854/edit?filter=quotes">Quotes</a>
-                      <a href="/settings/854/edit?filter=sales_orders">Sales Orders</a>
-                      <a href="/quick_tags">Quick Tags</a>
-                      <a href="/shipping_rules">Shipping Rules</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    General Ledger
-                  </a>
-                  <div class='dropdown_3columns'>
-                    <div class='col_2'>
-                      <h3>Chart of Accounts</h3>
-                      <a href="/gl_accounts">All</a>
-                      <a href="/gl_account_report_groups">Report Groups</a>
-                      <h3>List Transactions</h3>
-                      <a href="/accounting_transactions">All</a>
-                      <a href="/accounting_transactions?transaction_filter%5Bclean%5D=true">Exclude
-                        Reversals</a>
-                      <h3>Cheques/Misc Payments</h3>
-                      <a href="/draft_payment_disbursements/new">New Cheque/Misc. Payment</a>
-                      <a href="/draft_payment_disbursements">Unposted Cheque/Misc. Payments</a>
-                      <h3>Other</h3>
-                      <a href="/admin/tax_remittances_and_rebates">Tax Remittances</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>New G/L Entry</h3>
-                      <a href="/draft_transactions/new">New Transaction</a>
-                      <a href="/draft_transactions">Draft Transactions</a>
-                      <a href="/draft_transactions/unrealized_fx_gains_and_losses">Unrealized FX
-                        Gains &amp; Losses</a>
-                      <h3>Reconciliations</h3>
-                      <a href="/reconciliations/new">New</a>
-                      <a href="/reconciliations">List</a>
-                      <h3>Fixed Assets</h3>
-                      <a href="/fixed_assets/new">New</a>
-                      <a href="/fixed_assets">List</a>
-                      <a href="/accounting_periods/for_fixed_asset_amortization">Amortize
-                        Assets</a>
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align'>
-                  <a class='drop' href='#'>
-                    Tools
-                  </a>
-                  <div class='dropdown_1column'>
-                    <div class='col_1'>
-                      <a href="/imports/index">Getting Started</a>
-                      <a href="/imports_and_exports">Imports and Exports</a>
-                      <a href="/webstores">Webstores</a>
-                      <a href="/salesforce_import">Salesforce Imports</a>
-                      <a href="/xcart_imports">XCart Import</a>
-                      <a href="/tracelink_imports">Tracelink Import</a>
-
-                    </div>
-                  </div>
-                </li>
-                <li class='right-align' style='float:right;'>
-                  <a class='drop' href='#'>
-                    NEED HELP <i class='fa fa-question-circle'></i>
-                  </a>
-                  <div class='dropdown_2columns dropdown_2columns_wide'>
-                    <div class='col_1' style='width:200px;'>
-                      <h3>Getting Started Videos</h3>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360035379834-01-How-to-Setup-and-Configure-New-Account"
-                        target="_blank">How to Configure New Account</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021860014-05-How-to-Create-a-New-Product"
-                        target="_blank">How to Create a New Product</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360021858674-03-How-to-Create-a-New-Customer"
-                        target="_blank">How to Create a Customer</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022058493-09-How-to-Create-a-New-Sales-Order"
-                        target="_blank">How to Create a Sales Order</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022057293-04-How-to-Create-a-New-Supplier"
-                        target="_blank">How to Create a New Supplier</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/articles/360022058373-06-How-to-Create-a-Purchase-Order"
-                        target="_blank">How to Create a Purchase Order</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/sections/360004057293-16-Steps-to-Getting-Started-with-Versa"
-                        target="_blank">See All Getting Started Videos</a>
-                    </div>
-                    <div class='col_1'>
-                      <h3>Support</h3>
-                      <a href="https://support.versaccounts.com" target="_blank">Main Support
-                        Portal</a>
-                      <a href="https://support.versaclouderp.com/hc/en-us/requests/new" target="_blank">Create a
-                        Request</a>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-
-
-            </div>
-          </div>
-        </div> <!-- /main nav -->
-
-      </div><!-- end container -->
-    </div><!-- end navbar-inner -->
-  </div><!-- end navbar -->
-  <br />
-  <br />
   <div class=container>
     <form action="{{ url_for('main') }}" method="POST">
 
       <fieldset>
         <h2>Select Item id to run prediction</h2>
-      item_id:
-      <input name="item_id" type="number" required />
-      <br />
-      firm_id:
-      <input name="firm_id" type="number" required />
+        item_id:
+        <input name="item_id" type="number" required />
+        <br />
+        firm_id:
+        <input name="firm_id" type="number" required />
         <input class=".btn-group .btn btn-primary" name="grid" value="Run Predictions" type="submit" />
 
       </fieldset>
     </form>
     <br />
     <div class="result" align="center">
-      <div class="table table-responsive"> 
-      {% if result %} {% for variable, value in original_input.items() %}
-      <b>{{ variable }}</b> : {{ value }} {% endfor %}
-      <table>
+      <div class="table table-responsive">
+        {% if result %} {% for variable, value in original_input.items() %}
+        <b>{{ variable }}</b> : {{ value }} {% endfor %}
+        <table>
           <tr>
             <th>Date</th>
             <th>Predicted Sales</th>
@@ -729,36 +111,24 @@
             <td>{{ res['index'][:7] }}</td>
             <td>{{ res["predicted_mean"] | int }}</td>
           </tr>
-            {% endfor %}
-      </table>
+          {% endfor %}
+        </table>
       </div>
       <figure width="400" height="300" class="highcharts-figure">
-        <div  width="400" height="300" id="chart-container"></div>
+        <div width="400" height="300" id="chart-container"></div>
       </figure>
     </div>
-      {% endif %}
-      <br />
-      <br />
+    {% endif %}
+    <br />
+    <br />
 
-      <!-- 
+    <!-- 
       <div id="chart-container">
         <canvas id="chart" width="400" height="300"></canvas>
       </div> -->
 
 
   </div>
-
-  <footer class="footer">
-    <div class="container">
-      <p>Tel: (855) 445-2281&nbsp; |&nbsp; <a href="http://twitter.com/versaccounts" target="_new"><i
-            class='fa fa-twitter' title="twitter" style="font-size:150%;"></i></a> |&nbsp; <a
-          href="http://facebook.com/versaccounts" target="_new" title="facebook"><i class='fa fa-facebook'
-            style="font-size:150%;"></i></a> |&nbsp; <a href="http://www.versaccounts.com/blog" target="_new"
-          title="Blog"><i class='fa fa-file-text-alt' style="font-size:150%;"></i></a> |&nbsp;
-        <a href="mailto:info@versaccounts.com">info@versaccounts.com</a>
-      </p>
-    </div> <!-- end container -->
-  </footer><!-- end footer -->
 
   <script type="text/javascript">
 
@@ -767,7 +137,7 @@
       {% for res in result %}
     {
       x: monthNames[(new Date("{{ res['index']}}").getMonth())],
-        y: {{ res["predicted_mean"] | int }}
+        y: { { res["predicted_mean"] | int } }
     },
     {% endfor %}
          ];
@@ -775,7 +145,7 @@
 
       chart: {
         zoomType: 'x'
-        },
+      },
 
       title: {
         text: 'Sales Forecast'
@@ -797,11 +167,11 @@
         verticalAlign: 'middle'
       },
 
-    plotOptions: {
+      plotOptions: {
         series: {
-            fillOpacity: 0.1
+          fillOpacity: 0.1
         }
-    },
+      },
 
       series: [{
         name: 'Average Monthly Sales',
@@ -819,31 +189,31 @@
               align: 'center',
               verticalAlign: 'bottom'
             },
-             plotOptions: {
-                area: {
-                    fillColor: {
-                        linearGradient: {
-                            x1: 0,
-                            y1: 0,
-                            x2: 0,
-                            y2: 1
-                        },
-                        stops: [
-                            [0, Highcharts.getOptions().colors[0]],
-                            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
-                        ]
-                    },
-                    marker: {
-                        radius: 2
-                    },
-                    lineWidth: 1,
-                    states: {
-                        hover: {
-                            lineWidth: 1
-                        }
-                    },
-                    threshold: null
-                }
+            plotOptions: {
+              area: {
+                fillColor: {
+                  linearGradient: {
+                    x1: 0,
+                    y1: 0,
+                    x2: 0,
+                    y2: 1
+                  },
+                  stops: [
+                    [0, Highcharts.getOptions().colors[0]],
+                    [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                  ]
+                },
+                marker: {
+                  radius: 2
+                },
+                lineWidth: 1,
+                states: {
+                  hover: {
+                    lineWidth: 1
+                  }
+                },
+                threshold: null
+              }
             },
 
           }
