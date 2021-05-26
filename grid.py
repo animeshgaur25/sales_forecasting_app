@@ -1,4 +1,5 @@
 import psycopg2
+import pred
 import flask
 import random
 import sqlalchemy
@@ -31,65 +32,7 @@ def parser(s):
     return datetime.strptime(s, '%Y-%m-%d')
 
 
-def data_pts_chk(num):
-    if(num < 15):
-        return False
-    else:
-        return True
-
-# Ho: It is non stationary
-    #H1: It is stationary
-
-# def difference(dataset):
-#     diff = list()
-#     for i in range(1, len(dataset)):
-#         value = dataset[i] - dataset[i - 1]
-#         #print(value)
-#         diff.append(value)
-#     return pd.Series(diff)
-
-def adfuller_test(sales):
-    try:
-        result = adfuller(sales)
-    except ValueError:
-        return -1
-
-
-    labels = ['ADF Test Statistic', 'p-value',
-              '#Lags Used', 'Number of Observations Used']
-    for value, label in zip(result, labels):
-        print(label+' : '+str(value))
-    if result[1] <= 0.05:
-        print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
-        return 1
-    else:
-        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
-        return 0
-
-
-def sarima_configs(seasonal=[0]):
-    models = list()
-    # define config lists
-    p_params = [0, 1, 2]
-    d_params = [0,1]
-    q_params = [0, 1, 2]
-    P_params = [0, 1]
-    D_params = [0, 1]
-    Q_params = [0, 1]
-    m_params = seasonal
-    # create config instances
-    for p in p_params:
-        for d in d_params:
-            for q in q_params:
-                for P in P_params:
-                    for D in D_params:
-                        for Q in Q_params:
-                            for m in m_params:
-                                cfg = [(p, d, q), (P, D, Q, m)]
-                                models.append(cfg)
-    models = random.sample(models, 50)
-    return models
-
+# Calculating Sales per Month 
 def data_preprocessing(versa_sales1, item_id):
     versa_sales1['transaction_date'] = pd.to_datetime(versa_sales1['transaction_date'], errors='coerce')
     versa_sales1['transaction_date'] = versa_sales1['transaction_date'].dropna()
@@ -121,6 +64,65 @@ def data_preprocessing(versa_sales1, item_id):
     print(versa_sm)
     return versa_sm
 
+
+# def difference(dataset):
+#     diff = list()
+#     for i in range(1, len(dataset)):
+#         value = dataset[i] - dataset[i - 1]
+#         #print(value)
+#         diff.append(value)
+#     return pd.Series(diff)
+
+def data_pts_chk(num):
+    if(num < 15):
+        return False
+    else:
+        return True
+
+
+# Ho: It is non stationary
+# H1: It is stationary
+def adfuller_test(sales):
+    try:
+        result = adfuller(sales)
+    except ValueError:
+        return -1
+
+
+    labels = ['ADF Test Statistic', 'p-value',
+              '#Lags Used', 'Number of Observations Used']
+    for value, label in zip(result, labels):
+        print(label+' : '+str(value))
+    if result[1] <= 0.05:
+        print("strong evidence against the null hypothesis(Ho), reject the null hypothesis. Data has no unit root and is stationary")
+        return 1
+    else:
+        print("weak evidence against null hypothesis, time series has a unit root, indicating it is non-stationary ")
+        return 0
+
+
+def sarima_configs(seasonal=[0], d_params = 0):
+    models = list()
+    # define config lists
+    p_params = [0, 1, 2]
+    q_params = [0, 1, 2]
+    P_params = [0, 1]
+    D_params = [0, 1]
+    Q_params = [0, 1]
+    m_params = seasonal
+    # create config instances
+    for p in p_params:
+        for q in q_params:
+            for P in P_params:
+                for D in D_params:
+                    for Q in Q_params:
+                        for m in m_params:
+                            cfg = [(p, d_params, q), (P, D, Q, m)]
+                            models.append(cfg)
+    models = random.sample(models, 200)
+    return models
+
+
 def sarima_forecast(history, config):
     order, sorder = config
     # define model
@@ -140,7 +142,7 @@ def measure_rmse(actual, predicted):
 def walk_forward_validation(train_data, test_data, cfg):
     predictions = list()
     # split dataset
-    train, test = train_data["delta"], test_data["delta"]
+    train, test = train_data["log_sales"], test_data["log_sales"]
     # seed history with training dataset
     history = [x for x in train]
     # step over each time-step in the test set
@@ -201,24 +203,29 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
     # return 0
     item_id = int(item_id)
     firm_id = int(firm_id)
+    versa_sm1 = versa_sm
+    versa_sm1['log_sales'] = np.log(versa_sm1['delta']).dropna()
+    versa_sm.replace([np.inf, -np.inf],0 , inplace=True)
 
+    # Calculating d to make sales data stationary.
     d = 0
-    stationary = adfuller_test(versa_sm['delta'])
-    if stationary==-1:
-        print("More Sales Data is required for this item")
-        return "More Sales Data is required for this item"
+    while True:
+        stationary = adfuller_test(versa_sm1['log_sales'])
+        if stationary==-1:
+            print("More Sales Data is required for this item")
+            break
 
-    elif stationary == 1:
-        train_data, test_data = train_test_split(versa_sm, shuffle=False, test_size=0.2)
-        
-    else:
-        d= 1
-        versa_sm = versa_sm.diff()[1:]
-        train_data, test_data = train_test_split(versa_sm, shuffle=False, test_size=0.2)
+        elif stationary == 0:
+            d= d + 1
+            versa_sm1 = versa_sm1.diff().dropna()
 
+        else:
+            break 
 
+    # Splitting the data in training and test sets
+    train_data, test_data = train_test_split(versa_sm1, shuffle=False, test_size=0.2)
 
-    cfg_list = sarima_configs(seasonal=[0, 2, 3, 4, 6, 9, 12])
+    cfg_list = sarima_configs(seasonal=[0, 2, 3, 4, 6, 12], d_params = d)
     # grid search
     scores = grid_search(train_data, test_data, cfg_list)
     print('done')
@@ -235,6 +242,8 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
     seasonal_d = minpara[1][1]
     seasonal_q = minpara[1][2]
     s = minpara[1][3]
+
+    #Updating the results in DB table
     conn = psycopg2.connect(
         database="versa_db",
         user="postgres",
@@ -250,6 +259,7 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
     conn.commit()
     cur.close()
     conn.close()
+    res = pred.sales_forecast(item_id, firm_id, versa_sm)
     return "Parameter search completed!, click predict"
     # return scores[0]
     # scores[0] needs to be saved in the db.

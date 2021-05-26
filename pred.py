@@ -12,6 +12,7 @@ from statsmodels.tsa.stattools import acf, pacf
 from pandas.plotting import register_matplotlib_converters
 from datetime import timedelta
 from datetime import datetime
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import math
 import json
@@ -27,10 +28,16 @@ register_matplotlib_converters()
 def parser(s):
     return datetime.strptime(s, '%Y-%m-%d')
 
+def inverse_diff(initial_val, predictions):
+    res = np.r_[initial_val, predictions].cumsum()
+    res1 = pd.Series(res[1:], index= predictions.index, name="predicted_mean")
+    return res1
 
 def sales_forecast(item_id, firm_id, versa_sm):
     item_id = int(item_id)
     firm_id = int(firm_id)
+    versa_sm['log_sales'] = np.log(versa_sm['delta']).dropna()
+    versa_sm.replace([np.inf, -np.inf],0 , inplace=True)
     #versa_sales = pd.read_csv(r"C:\Users\prasa\Documents\programs\demo_sales_fc\data_updated22-09.csv", parse_dates=[4], index_col=0, squeeze=True, date_parser=parser)
     engine = sqlalchemy.create_engine(
         'postgresql://postgres:bits123@localhost:5432/versa_db')
@@ -40,7 +47,8 @@ def sales_forecast(item_id, firm_id, versa_sm):
     WHERE flag = 1 AND inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': item_id, 'firm_id': firm_id}
     # SQL injection
     parameters = pd.read_sql_query(query, engine)
-
+    if parameters.empty: 
+        return parameters
     para = parameters[(parameters["inventory_item_id"] == item_id)]
     p = para.loc[para['inventory_item_id'] == item_id, 'p'].iloc[0]
     d = para.loc[para['inventory_item_id'] == item_id, 'd'].iloc[0]
@@ -49,39 +57,63 @@ def sales_forecast(item_id, firm_id, versa_sm):
     Q = para.loc[para['inventory_item_id'] == item_id, 'seasonal_q'].iloc[0]
     D = para.loc[para['inventory_item_id'] == item_id, 'seasonal_d'].iloc[0]
     s = para.loc[para['inventory_item_id'] == item_id, 's'].iloc[0]
-    if d == 1:
-        train_data = versa_sm.diff()[1:]
-        # first_diff
-    else:
-        train_data = versa_sm
-
     my_order = (p, d, q)
     my_seasonal_order = (P, D, Q, s)
+    if d == 0:
+        model = SARIMAX(versa_sm['log_sales'], order=my_order, seasonal_order=my_seasonal_order, enforce_stationarity=False, enforce_invertibility=False )
+        start = versa_sm.first_valid_index()
+        end = versa_sm.last_valid_index()
+
+    elif d==1:
+        first_diff = versa_sm.diff().dropna()
+        model = SARIMAX(first_diff['log_sales'], order=my_order, seasonal_order=my_seasonal_order, enforce_stationarity=False, enforce_invertibility=False )
+        start = first_diff.first_valid_index()
+        end = first_diff.last_valid_index()
+        print(first_diff)
+       
+    else:
+        second_diff = first_diff.diff().diff().dropna()
+        model = SARIMAX(second_diff['log_sales'], order=my_order, seasonal_order=my_seasonal_order, enforce_stationarity=False, enforce_invertibility=False )
+        start = second_diff.first_valid_index()
+        end = second_diff.last_valid_index()
+        print(second_diff)
+
 
 # till here
-    model = SARIMAX(train_data["delta"], order=my_order,
-                    seasonal_order=my_seasonal_order)
-    #start = time()
+    
     model_fit = model.fit()
-    #end = time()
-    predictions = model_fit.forecast(12)
-    # return predictions
-    print("*****************************\n", predictions)
+    test_pred = model_fit.predict(start, end)
+    pred = model_fit.forecast(24)
+    predictions = pd.concat([test_pred, pred])
+    months = list(predictions.index.astype(str))
+    print(predictions)
     if d == 0:
-        predictions.columns = ["values"]
-        resp = predictions.to_json(orient='table')
+        predictions[predictions < 0 ] = 0
+        result = pd.concat([predictions, versa_sm], axis=1)
+
 
     else:
-        res = pd.Series()
-        initial_val = versa_sm['delta'][-1]
-        for i in range(len(predictions)):
-            res = res.append(
-                pd.Series((initial_val+predictions[i]), name="predicted_mean", index=[predictions.index[i]]))
-            res.name = "predicted_mean"
-            initial_val = initial_val+predictions[i]
-        resp = res.to_json(orient='table')
+        predictions = inverse_diff(versa_sm['log_sales'][0], predictions)
+        print(predictions)
+        predictions[predictions < 0 ] = 0
+        result = pd.concat([predictions, versa_sm], axis=1)
 
+    # else:
+    #     first_diff = versa_sm.diff().dropna()
+    #     pred_diff= inverse_diff(first_diff['log_sales'][0], predictions)
+    #     predictions= inverse_diff(versa_sm['log_sales'][0], pred_diff)
+    #     print(predictions)
+    #     predictions[predictions < 0 ] = 0
+    #     result = pd.concat([predictions, versa_sm], axis=1)
 
+    print("*****************************\n", result)
+    result['predicted_mean'] = np.exp(result['predicted_mean'])
+    result['forecast_error'] = (result['delta'] - result['predicted_mean'])/result['delta'] * 100
+    result.replace([np.inf, -np.inf],0 , inplace=True)
+    result = result.fillna(0)
+    result = result.round(2)
+    resp = (result.to_json(orient='table'))
+    versa_sales_data= (versa_sm.to_json(orient='table'))
 
     conn = psycopg2.connect(
         database="versa_db",
@@ -91,12 +123,22 @@ def sales_forecast(item_id, firm_id, versa_sm):
         port="5432"
     )
     cur = conn.cursor()
+    for index, row in result.iterrows():
+        query = '''
+        SELECT *
+        FROM sales_predictions
+        WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' AND months = '%(index)s' ''' % {'item_id': item_id, 'firm_id': firm_id, 'index': index}
+        # SQL injection
+        pred_table = pd.read_sql_query(query, engine)
+        if pred_table.empty: 
+            cur.execute('INSERT INTO sales_predictions (months, forecast_sales, actual_sales , forecast_error, inventory_item_id, firm_id) values (%s,%s,%s,%s,%s,%s)',
+                        (str(index), int(row['predicted_mean']), int(row['delta']), float(row['forecast_error']),  item_id, firm_id))
+            conn.commit()
+        else:
+            cur.execute('UPDATE sales_predictions SET forecast_sales = %s , actual_sales = %s , forecast_error = %s WHERE inventory_item_id = %s AND firm_id = %s AND months = %s',
+                        (int(row['predicted_mean']), int(row['delta']), float(row['forecast_error']),  item_id, firm_id, str(index)))
+            conn.commit()
 
-    cur.execute("UPDATE sales_predictions SET predictions = %s WHERE item_id = %s AND firm_id = %s",
-                (resp, item_id, firm_id))
-    
-    conn.commit()
     cur.close()
     conn.close()
-
     return (resp)
