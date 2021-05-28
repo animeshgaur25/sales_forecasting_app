@@ -45,13 +45,13 @@ def data_pts_check(versa_sm):
 
 def extract_sales_data(firm_id):
     engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://root:root@localhost:5432/development_master')
 
     query1 = '''
     SELECT inventory_items.id , inventory_items.firm_id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
     FROM inventory_transaction_details
-    INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
-    ORDER BY inventory_item_id;
+    INNER JOIN inventory_items ON inventory_transaction_details.item_id=inventory_items.id WHERE inventory_items.firm_id = '%(firm_id)d'
+    ORDER BY item_id;
     '''% {'firm_id': firm_id}
 
     versa_sales = pd.read_sql_query(query1, engine)
@@ -75,13 +75,13 @@ def call_grid_search(versa_sales1, item_id, engine, conn, cur):
         query = '''
         SELECT *
         FROM forecasting_parameters
-        WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': int(item_id), 'firm_id': int(firm_id)}
+        WHERE item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': int(item_id), 'firm_id': int(firm_id)}
     
         # SQL injection
         para_table = pd.read_sql_query(query, engine)
 
         if para_table.empty:
-            cur.execute("INSERT into forecasting_parameters (inventory_item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+            cur.execute("INSERT into forecasting_parameters (item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                         (int(item_id), int(firm_id), -1, -1, -1, -1, -1, -1, -1, 0))
             conn.commit()
 
@@ -99,12 +99,12 @@ def call_grid_search(versa_sales1, item_id, engine, conn, cur):
 
 def extract_high_items(firm_id):
     engine = sqlalchemy.create_engine(
-    'postgresql://postgres:bits123@localhost:5432/versa_db')
+    'postgresql://root:root@localhost:5432/development_master')
     query = '''
     SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currency_name
     FROM inventory_transaction_details
-    INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
-    ORDER BY inventory_item_id;
+    INNER JOIN inventory_items ON inventory_transaction_details.item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
+    ORDER BY item_id;
     ''' % {'firm_id': firm_id}
     data_abc = pd.read_sql_query(query, engine)
     print(data_abc)
@@ -152,12 +152,12 @@ def extract_high_items(firm_id):
 
 def weekly_update_parameters():
     engine = sqlalchemy.create_engine(
-    'postgresql://postgres:bits123@localhost:5432/versa_db')
+    'postgresql://root:root@localhost:5432/development_master')
     conn = psycopg2.connect(
-        database="versa_db",
-        user="postgres",
-        password="bits123",
-        host="localhost",
+        database="development_master",
+        user="root",
+        password="root",
+        host="13.59.114.232",
         port="5432"
     )
     cur = conn.cursor()
@@ -207,17 +207,17 @@ def main2():
         firm_id = int(firm_id)
        
         engine = sqlalchemy.create_engine(
-        'postgresql://postgres:bits123@localhost:5432/versa_db')
+        'postgresql://root:root@localhost:5432/development_master')
         conn = psycopg2.connect(
-            database="versa_db",
-            user="postgres",
-            password="bits123",
+            database="development_master",
+            user="root",
+            password="root",
             host="localhost",
             port="5432"
         )
         cur = conn.cursor()
         # query = '''
-        # SELECT forecasting_parameters.inventory_item_id
+        # SELECT forecasting_parameters.item_id
         # FROM forecasting_parameters
         # WHERE forecasting_parameters.firm_id = %(firm_id)d and forecasting_parameters.flag = 1
         # ''' % {'firm_id': firm_id}
@@ -268,10 +268,10 @@ def main():
 
     if (flask.request.method == 'GET'):
         engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://root:root@localhost:5432/development_master')
 
         query = '''
-        SELECT forecasting_parameters.inventory_item_id
+        SELECT forecasting_parameters.item_id
         FROM forecasting_parameters
         WHERE forecasting_parameters.firm_id = 568 and forecasting_parameters.flag = 1
         '''
@@ -291,11 +291,11 @@ def main():
         versa_sm = grid.data_preprocessing(versa_sales, item_id)
 
         engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://root:root@localhost:5432/development_master')
         conn = psycopg2.connect(
-            database="versa_db",
-            user="postgres",
-            password="bits123",
+            database="development_master",
+            user="root",
+            password="root",
             host="localhost",
             port="5432"
         )
@@ -322,14 +322,14 @@ def main3():
         firm_id = flask.request.form['firm_id']
         firm_id = int(firm_id)
         engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://root:root@localhost:5432/development_master')
 
     # extracting sales data
         query = '''
         SELECT products.name, parts.part_number, price_components.price,  inventory_items.id, inventory_items.firm_id,  inventory_transaction_details.delta, inventory_transaction_details.transaction_date,  price_components.currency_id, currencies.name as currency_name
         FROM inventory_transaction_details
-        INNER JOIN inventory_items ON inventory_transaction_details.inventory_item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
-        ORDER BY inventory_item_id;
+        INNER JOIN inventory_items ON inventory_transaction_details.item_id=inventory_items.id INNER JOIN parts on parts.id = inventory_items.part_id INNER JOIN products on parts.id=products.part_id INNER JOIN price_components on price_components.product_id=products.id and price_components.measurement_unit_id = products.measurement_unit_id INNER JOIN currencies on currencies.id = price_components.currency_id WHERE price_components.break_quantity = 1 and inventory_items.firm_id = '%(firm_id)d'
+        ORDER BY item_id;
         ''' % {'firm_id': firm_id}
         data_abc = pd.read_sql_query(query, engine)
         data_abc['transaction_date'] = pd.to_datetime(

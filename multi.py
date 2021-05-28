@@ -137,7 +137,7 @@ def thread_count(threadName, delay, counter, session):
 
 def extract_data():
     engine = sqlalchemy.create_engine(
-            'postgresql://postgres:bits123@localhost:5432/versa_db')
+            'postgresql://root:root@localhost:5432/development_master')
 
     query1 = '''
     SELECT inventory_items.id , inventory_items.firm_id, inventory_transaction_details.delta,	inventory_transaction_details.transaction_date
@@ -157,7 +157,7 @@ def call_grid_search(versa_sales1, item_id):
     firm_id = versa_sales1.loc[versa_sales1['inventory_item_id']== item_id, 'firm_id'].iloc[0]
     print(id)
     engine = sqlalchemy.create_engine(
-        'postgresql://postgres:bits123@localhost:5432/versa_db')
+        'postgresql://root:root@localhost:5432/development_master')
     query = '''
     SELECT *
     FROM forecasting_parameters
@@ -177,9 +177,9 @@ def call_grid_search(versa_sales1, item_id):
     if versa_sm is not None:
         data_pts_check(versa_sm)
         conn = psycopg2.connect(
-            database="versa_db",
-            user="postgres",
-            password="bits123",
+            database="development_master",
+            user="root",
+            password="root",
             host="localhost",
             port="5432"
         )

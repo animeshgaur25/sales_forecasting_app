@@ -188,9 +188,9 @@ def abc_analysis(firm_id, data_abc):
     }
 
     conn = psycopg2.connect(
-        database="versa_db",
-        user="postgres",
-        password="bits123",
+        database="development_master",
+        user="root",
+        password="root",
         host="localhost",
         port="5432"
     )
@@ -199,7 +199,7 @@ def abc_analysis(firm_id, data_abc):
     SELECT *
     FROM sales_abc_analyses
     WHERE firm_id = '%(firm_id)d' ''' % {'firm_id': firm_id}
-    engine = sqlalchemy.create_engine('postgresql://postgres:bits123@localhost:5432/versa_db')
+    engine = sqlalchemy.create_engine('postgresql://root:root@localhost:5432/development_master')
     # SQL injection
     abc_table = pd.read_sql_query(query, engine)
     if abc_table.empty:

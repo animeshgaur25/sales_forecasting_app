@@ -245,15 +245,15 @@ def user_inp_grid_search(item_id, firm_id, versa_sm):
 
     #Updating the results in DB table
     conn = psycopg2.connect(
-        database="versa_db",
-        user="postgres",
-        password="bits123",
+        database="development_master",
+        user="root",
+        password="root",
         host="localhost",
         port="5432"
     )
     cur = conn.cursor()
-    #cur.execute("DELETE from forecasting_parameters WHERE inventory_item_id")
-    cur.execute("UPDATE forecasting_parameters SET p = %s ,d = %s ,q = %s,seasonal_p = %s,seasonal_d = %s,seasonal_q = %s,s = %s,flag = %s WHERE inventory_item_id = %s AND firm_id = %s",
+    #cur.execute("DELETE from forecasting_parameters WHERE item_id")
+    cur.execute("UPDATE forecasting_parameters SET p = %s ,d = %s ,q = %s,seasonal_p = %s,seasonal_d = %s,seasonal_q = %s,s = %s,flag = %s WHERE item_id = %s AND firm_id = %s",
                 (p, d, q, seasonal_p, seasonal_d, seasonal_q, s, 1, item_id, firm_id))
     # %{'p': p, 'd': d, 'q': q, 'P': P, 'D': D, 'Q': Q, 's': s, 'item_id': item_id, 'firm_id': firm_id})
     conn.commit()

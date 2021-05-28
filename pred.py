@@ -40,23 +40,23 @@ def sales_forecast(item_id, firm_id, versa_sm):
     versa_sm.replace([np.inf, -np.inf],0 , inplace=True)
     #versa_sales = pd.read_csv(r"C:\Users\prasa\Documents\programs\demo_sales_fc\data_updated22-09.csv", parse_dates=[4], index_col=0, squeeze=True, date_parser=parser)
     engine = sqlalchemy.create_engine(
-        'postgresql://postgres:bits123@localhost:5432/versa_db')
+        'postgresql://root:root@localhost:5432/development_master')
     query = '''
     SELECT *
     FROM forecasting_parameters
-    WHERE flag = 1 AND inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': item_id, 'firm_id': firm_id}
+    WHERE flag = 1 AND item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' ''' % {'item_id': item_id, 'firm_id': firm_id}
     # SQL injection
     parameters = pd.read_sql_query(query, engine)
     if parameters.empty: 
         return parameters
-    para = parameters[(parameters["inventory_item_id"] == item_id)]
-    p = para.loc[para['inventory_item_id'] == item_id, 'p'].iloc[0]
-    d = para.loc[para['inventory_item_id'] == item_id, 'd'].iloc[0]
-    q = para.loc[para['inventory_item_id'] == item_id, 'q'].iloc[0]
-    P = para.loc[para['inventory_item_id'] == item_id, 'seasonal_p'].iloc[0]
-    Q = para.loc[para['inventory_item_id'] == item_id, 'seasonal_q'].iloc[0]
-    D = para.loc[para['inventory_item_id'] == item_id, 'seasonal_d'].iloc[0]
-    s = para.loc[para['inventory_item_id'] == item_id, 's'].iloc[0]
+    para = parameters[(parameters["item_id"] == item_id)]
+    p = para.loc[para['item_id'] == item_id, 'p'].iloc[0]
+    d = para.loc[para['item_id'] == item_id, 'd'].iloc[0]
+    q = para.loc[para['item_id'] == item_id, 'q'].iloc[0]
+    P = para.loc[para['item_id'] == item_id, 'seasonal_p'].iloc[0]
+    Q = para.loc[para['item_id'] == item_id, 'seasonal_q'].iloc[0]
+    D = para.loc[para['item_id'] == item_id, 'seasonal_d'].iloc[0]
+    s = para.loc[para['item_id'] == item_id, 's'].iloc[0]
     my_order = (p, d, q)
     my_seasonal_order = (P, D, Q, s)
     if d == 0:
@@ -116,9 +116,9 @@ def sales_forecast(item_id, firm_id, versa_sm):
     versa_sales_data= (versa_sm.to_json(orient='table'))
 
     conn = psycopg2.connect(
-        database="versa_db",
-        user="postgres",
-        password="bits123",
+        database="development_master",
+        user="root",
+        password="root",
         host="localhost",
         port="5432"
     )
@@ -127,15 +127,15 @@ def sales_forecast(item_id, firm_id, versa_sm):
         query = '''
         SELECT *
         FROM sales_predictions
-        WHERE inventory_item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' AND months = '%(index)s' ''' % {'item_id': item_id, 'firm_id': firm_id, 'index': index}
+        WHERE item_id = '%(item_id)d' AND firm_id = '%(firm_id)d' AND months = '%(index)s' ''' % {'item_id': item_id, 'firm_id': firm_id, 'index': index}
         # SQL injection
         pred_table = pd.read_sql_query(query, engine)
         if pred_table.empty: 
-            cur.execute('INSERT INTO sales_predictions (months, forecast_sales, actual_sales , forecast_error, inventory_item_id, firm_id) values (%s,%s,%s,%s,%s,%s)',
+            cur.execute('INSERT INTO sales_predictions (months, forecast_sales, actual_sales , forecast_error, item_id, firm_id) values (%s,%s,%s,%s,%s,%s)',
                         (str(index), int(row['predicted_mean']), int(row['delta']), float(row['forecast_error']),  item_id, firm_id))
             conn.commit()
         else:
-            cur.execute('UPDATE sales_predictions SET forecast_sales = %s , actual_sales = %s , forecast_error = %s WHERE inventory_item_id = %s AND firm_id = %s AND months = %s',
+            cur.execute('UPDATE sales_predictions SET forecast_sales = %s , actual_sales = %s , forecast_error = %s WHERE item_id = %s AND firm_id = %s AND months = %s',
                         (int(row['predicted_mean']), int(row['delta']), float(row['forecast_error']),  item_id, firm_id, str(index)))
             conn.commit()
 
