@@ -185,7 +185,7 @@ def call_grid_search(versa_sales1, item_id):
         )
         cur = conn.cursor()
 
-        cur.execute("INSERT into forecasting_parameters (inventory_item_id, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+        cur.execute("INSERT into forecasting_parameters (inventory_item, firm_id,p,d,q,seasonal_p,seasonal_d,seasonal_q,s,flag) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
                     (item_id, firm_id, -1, -1, -1, -1, -1, -1, -1, 0))
         conn.commit()
         cur.close()
