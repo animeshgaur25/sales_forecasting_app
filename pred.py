@@ -83,7 +83,7 @@ def sales_forecast(item_id, firm_id, versa_sm):
     
     model_fit = model.fit()
     test_pred = model_fit.predict(start, end)
-    pred = model_fit.forecast(24)
+    pred = model_fit.forecast(180)
     predictions = pd.concat([test_pred, pred])
     months = list(predictions.index.astype(str))
     print(predictions)
