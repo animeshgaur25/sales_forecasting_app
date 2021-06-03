@@ -31,7 +31,7 @@ def abc_analysis(firm_id, data_abc):
 
 # obsolete_items = data_abc[data_abc['transaction_date']<'2018-01-01']
     today = pd.to_datetime("today")
-    obsolete_time = (today - pd.DateOffset(years=2)).to_period("M")
+    obsolete_time = (today - pd.DateOffset(years=20)).to_period("M")
     data_abc = data_abc[data_abc['transaction_date']
                                 > obsolete_time]
 
